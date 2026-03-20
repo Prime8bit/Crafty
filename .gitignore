@@ -1,0 +1,11 @@
+.vscode
+Notes.txt
+
+# ASP.NET
+API/bin
+API/obj
+
+# Node
+client/node_modules
+client/npm-debug.log
+client/yarn-error.log

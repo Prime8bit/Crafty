@@ -1,0 +1,9 @@
+@if (order) {
+    <p>Seller {{order.sellerUserName}}</p>
+    <p>Buyer {{order.buyerName}}</p>
+    <ul>
+        @for (orderItem of order.orderItems; track orderItem.id) {
+            <li>{{orderItem.quantity}} {{orderItem.craftName}}s</li>
+        }
+    </ul>
+}

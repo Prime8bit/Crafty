@@ -1,0 +1,107 @@
+<div class="row">
+    <div class="text-center mt-3">
+        <h2>You wishlist contains {{wishlistService.paginatedResult().pagination.totalItems}} crafts</h2>
+    </div>
+
+
+    <div class="container mt-3 d-flex align-items-start">
+        
+        <form            
+            #form="ngForm"
+            class="d-flex mb-3"
+            (ngSubmit)="loadWishlist()"
+            >
+            <div class="d-flex mx-2">
+                <label class="col-form-label">Min Price:</label>
+                <input type="number"
+                class="form-control ms-1"
+                style="width: 120px"
+                name="minPrice"
+                [(ngModel)]="wishlistService.craftListParams().minPrice"
+                >
+            </div>
+            <div class="d-flex mx-2">
+                <label class="col-form-label">Max Price:</label>
+                <input type="number"
+                class="form-control ms-1"
+                style="width: 120px"
+                name="maxPrice"
+                [(ngModel)]="wishlistService.craftListParams().maxPrice"
+                >
+            </div>
+            <div class="d-flex mx-2 align-items-center form-check form-switch">
+                <input type="checkbox"
+                class="form-check-input mx-2"
+                name="inStockOnly"
+                [(ngModel)]="wishlistService.craftListParams().inStockOnly"
+                >                
+                <label class="form-check-label col-form-label">In Stock Only</label>
+            </div>
+            <button 
+                class="btn btn-primary ms-1" 
+                type="submit">Apply Filters</button>
+            <button 
+                class="btn btn-info ms-1" 
+                type="button"
+                (click)="resetFilters()">Reset Filters</button>
+        </form>
+        <div class="d-flex mx-4">
+            <label class="col-form-label">Sort:</label>
+            <div class="btn-group" dropdown>
+                <button id="button-basic" 
+                dropdownToggle 
+                type="button" 
+                class="btn btn-primary dropdown-toggle mx-3" 
+                aria-controls="dropdown-basic"
+                >
+                    {{ selectedSortOption }} <span class="caret"></span>
+                </button>
+                <ul id="dropdown-basic" 
+                    *dropdownMenu 
+                    class="dropdown-menu"
+                    role="menu" 
+                    aria-labelledby="button-basic">
+                    @for (optionPair of craftSortDict | keyvalue; track optionPair.key) {
+                        <li role="menuitem">
+                            <a class="dropdown-item" (click)="sort(optionPair.key)">
+                                {{ optionPair.key }}
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+            @if (wishlistService.craftListParams().isOrderDescending) {
+                <button type="button" class="btn btn-primary btn-xs" (click)="setSortOrder(false)">
+                    <span class="fa fa-chevron-down"></span>
+                </button>
+            } @else {
+                <button type="button" class="btn btn-primary btn-xs" (click)="setSortOrder(true)">
+                    <span class="fa fa-chevron-up"></span>
+                </button>
+            }
+        </div>
+    </div>
+
+    @for (craft of wishlistService.paginatedResult().items; track craft.id) {
+        <div class="col-3">
+            <app-craft-card [craft]="craft"></app-craft-card>
+        </div>
+    }
+    @if (wishlistService.paginatedResult().pagination.totalItems > 0) {
+        <div class="d-flex justify-content-center">
+            <pagination 
+            [boundaryLinks]="true" 
+            [totalItems]="wishlistService.paginatedResult().pagination!.totalItems"
+            [itemsPerPage]="wishlistService.paginatedResult().pagination!.itemsPerPage"
+            (pageChanged)="pageChanged($event)"
+            [(ngModel)]="wishlistService.paginatedResult().pagination!.currentPage"
+            [maxSize]="10"
+            previousText="&lsaquo;" 
+            nextText="&rsaquo;" 
+            firstText="&laquo;" 
+            lastText="&raquo;">
+            
+            </pagination> 
+        </div> 
+    }
+</div> 

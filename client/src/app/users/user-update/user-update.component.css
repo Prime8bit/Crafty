@@ -1,0 +1,32 @@
+.mediaItem {
+    margin: 25px;
+    max-width: 500px;
+    max-height: 500px;
+    height: auto;
+    width: 500px;
+}
+
+.card-body {
+    padding: 25px;
+}
+
+.card-footer {
+    padding: 10px 15px;
+    border-top: none;
+}
+
+.card-image {
+    max-width: 400px;
+    max-height: 400px;
+    width: auto;
+    height: auto;
+}
+
+#newCraft {
+    border-bottom: solid grey 2px;
+    padding: 10px;
+}
+
+#newCraft button {
+    width: auto;
+}

@@ -1,0 +1,22 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine
+
+# Install Git and SQLite libraries in a single layer
+# --no-cache keeps the image small by not storing the index locally
+RUN apk add --no-cache git sqlite-dev
+
+ENV ASPNETCORE_URLS=http://0.0.0.0:5000
+
+# Define where the code will live
+WORKDIR /Crafty
+
+# Bake the code and dependencies
+RUN git clone https://github.com/Prime8bit/Crafty.git . \
+    && dotnet restore API/API.csproj
+    
+WORKDIR /Crafty/API
+
+EXPOSE 5000
+
+# Clone and Run at startup
+# This ensures they ALWAYS get your latest GitHub commits
+ENTRYPOINT ["dotnet", "run", "--project", "API.csproj", "--urls", "http://0.0.0.0:5000"]

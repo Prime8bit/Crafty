@@ -1,0 +1,23 @@
+.mediaItem {
+    margin: 25px;
+    max-width: 500px;
+    max-height: 500px;
+    height: auto;
+    width: 500px;
+}
+
+.card-body {
+    padding: 0 25px;
+}
+
+.card-footer {
+    padding: 10px 15px;
+    border-top: none;
+}
+
+.card-image {
+    max-width: 400px;
+    max-height: 400px;
+    width: auto;
+    height: auto;
+}

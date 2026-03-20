@@ -1,0 +1,79 @@
+<div class="row">
+    <div class="col-4">
+        <div class="card">
+            <div class="d-flex flex-column justify-content-center align-items-center">
+                <app-profile-image-uploader></app-profile-image-uploader>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-auto text-nowrap">
+                            <p><strong>Name: </strong></p>                        
+                    </div>
+                    <div class="col">
+                        <form id="editForm" #editForm="ngForm" (ngSubmit)="updateUser()">
+                            <!-- the name of the input must match the property name in user-->
+                            <input class="form-control" name="displayName" type="text"
+                                [(ngModel)]="user.displayName" />
+                        </form>
+                    </div>
+                </div>
+                <p><strong>Member since: </strong>{{user.created | date:'medium'}}</p>
+                <div class="card-footer d-flex justify-content-center">
+                    <button 
+                    [disabled]="!editForm.dirty"
+                    form="editForm" 
+                    type="submit" 
+                    class="btn btn-primary d-flex align-items-center"
+                    >
+                        <i class="fa fa-floppy-o me-2"></i>
+                        <p class="mb-0">Save Changes</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Bootstrap uses a 12 column grid so use the remaining space. -->
+    <div class="col-8">
+        <tabset #tabset>
+            <tab heading="Crafts" (selectTab)="onTabActivated($event)">
+                <div id="newCraft" class="row d-flex align-items-center justify-content-center m-2">
+                    <button 
+                    class="btn btn-primary d-flex align-items-center"
+                    routerLink="/craft/newCraft"
+                    >
+                        <i class="fa fa-square-plus me-2"></i>
+                        <p class="mb-0">New Craft...</p>
+                    </button>
+                    <button 
+                        class="btn btn-primary d-flex align-items-center mx-2"
+                        (click)="toggleArchivedCrafts()"
+                        >
+                        <i class="fa fa-square-plus me-2"></i>
+                        @if (filterArchived) {
+                            <p class="mb-0">Show archived</p>
+                        } @else {
+                            <p class="mb-0">Hide archived</p>
+                        }
+                    </button>
+                </div>
+                <div class="row">
+                    @for (craft of user.products; track craft.id) {
+                        @if (!filterArchived || !craft.isArchived)
+                        {
+                            <div class="col-3">
+                                <app-craft-card [craft]="craft"></app-craft-card>
+                            </div>
+                        }
+                    }
+                </div>
+            </tab>
+            <tab heading="Wishlist" (selectTab)="onTabActivated($event)">
+                <app-wishlist></app-wishlist>
+            </tab>
+            <tab heading="Orders" (selectTab)="onTabActivated($event)">
+                <app-order-list #orderList></app-order-list>
+            </tab>
+        </tabset>
+    </div>
+    <!-- FUTURE (Nate): If I want to improve this, I would add reviews here, but that increases the complexity of this project significantly. -->
+</div>

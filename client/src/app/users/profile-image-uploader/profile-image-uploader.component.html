@@ -1,0 +1,41 @@
+<div class="profile-picture">
+    <!-- Make this input hidden so I can style the buttons for it. -->
+    <input 
+    type="file" 
+    accept="image/*" 
+    (change)="onFileSelected($event)" 
+    hidden 
+    #fileInput />
+
+    <div class="img-wrapper d-flex justify-content-center align-items-center">
+        
+        <img 
+        [src]="currentImageUrl" 
+        alt="Profile picture" 
+        class="img-top" />
+
+        <ul class="list-inline button-icons text-center">
+            @if (currentImageUrl == user?.profileImage?.url) {            
+                <li class="list-inline-item">
+                    <button 
+                    class="btn btn-primary"
+                    (click)="fileInput.click()"
+                    ><i class="fa fa-folder-open"></i></button>
+                </li>
+            } @else {    
+                <li class="list-inline-item">
+                    <button 
+                    class="btn btn-primary"
+                    (click)="save()"
+                    ><i class="fa fa-cloud-upload"></i></button>
+                </li>
+                <li class="list-inline-item">
+                    <button 
+                    class="btn btn-primary"
+                    (click)="cancel()"
+                    ><i class="fa fa-times"></i></button>
+                </li>
+            }
+        </ul>
+    </div>
+</div>

@@ -1,0 +1,5 @@
+<div class="col">
+    @for (user of userService.users(); track user.id) {
+        <div class="row"><p>{{user.fullName}}</p></div>
+    }
+</div>

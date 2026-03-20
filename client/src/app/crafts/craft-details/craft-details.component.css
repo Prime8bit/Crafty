@@ -1,0 +1,38 @@
+.mediaItem {
+    margin: 25px;
+    max-width: 500px;
+    max-height: 500px;
+    height: auto;
+    width: 500px;
+}
+
+.card-body {
+    padding: 0 25px;
+}
+
+.card-footer {
+    padding: 10px 15px;
+    border-top: none;
+}
+
+#mediaCarousel {
+    height: 100%;
+    width: 100%;
+}
+
+.videoItem {
+    padding: 0px 50px;
+    background-color: grey;
+}
+
+/** Bootstrap carousel arrows can't be seen on top of white images 
+    because I bootstrap classes aren't being controlled by angular, I need to put ::ng-deep
+    to prevent angular from appending angular id's to the css for the arrows
+**/
+#craftMediaCarousel ::ng-deep .carousel-control-prev-icon,
+#craftMediaCarousel ::ng-deep .carousel-control-next-icon {
+    /* Black shadow creates a 'cut-out' effect against white backgrounds */
+    filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.8));
+    width: 3rem;  /* Optional: make them slightly larger for better accessibility */
+    height: 3rem;
+}

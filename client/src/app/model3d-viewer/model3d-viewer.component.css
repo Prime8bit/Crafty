@@ -1,0 +1,13 @@
+/* both canvas and host need to have display:block; width: 100%; height: 100%; to inherit from parent containers */
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+canvas {
+  /* This ensures the canvas fills the now-expanded host element */
+  width: 100%;
+  height: 100%;
+  display: block;
+}

@@ -1,0 +1,46 @@
+@if (user) {
+    <form id="updateCraftForm" #updateCraftForm="ngForm" (ngSubmit)="updateCraft()" class="container mt-5" autocomplete="off">
+        <h2 class="text-center text-primary">New Craft</h2>
+        <hr>
+        <div class="row d-flex align-items-center mb-3">
+            <p class="col-2">Name</p>
+            <input name="name" [(ngModel)]="craft.name" class="col form-control" type="text" aria-label="Name"
+                autocomplete="off" required>
+        </div>
+        <div class="row d-flex align-items-center mb-3">
+            <p class="col-2">Price</p>
+            <input name="price" [(ngModel)]="craft.price" class="col form-control" type="text" aria-label="Price"
+                required>
+        </div>
+        <div class="row d-flex align-items-center mb-3">
+            <p class="col-2">Description</p>
+            <textarea name="description" [(ngModel)]="craft.description" class="col form-control" rows="14"
+                aria-label="Description"></textarea>
+        </div>
+        <div class="row d-flex align-items-center mb-3">
+            <p class="col-2">Stock</p>
+            <input name="stock" [(ngModel)]="craft.stock" class="col form-control" type="number" aria-label="Stock"
+                required>
+        </div>
+        <!-- bindings bind to objects whose value is encapsulated in quotes. 
+        To set the value to the string, you need to do single quotes within double quotes -->
+        <!-- The accepted types may NOT have spaces between them -->
+        <!-- TODO (Nate): Change this so the form will warn the user if they attempt to submit 
+                the form without uploading files in the queue. -->
+        <app-media-uploader 
+        id="mediaUploader"
+        #mediaUploader
+        [parentCraft]="craft"
+        (parentCraftChanged)="onParentCraftChanged($event)"
+        ></app-media-uploader>
+    </form>
+
+    <div class="form-group text-center m-2">
+        @if (craftId === null) {
+            <button class="btn btn-success me-2" type="submit" form="updateCraftForm">Create</button>
+        } @else {
+            <button class="btn btn-success me-2" type="submit" form="updateCraftForm">Update</button>
+        }
+        <button type="button" routerLink="/user/update" class="btn btn-default me-2">Cancel</button>
+    </div>
+}

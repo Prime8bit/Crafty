@@ -1,0 +1,103 @@
+<form [formGroup]="registerForm" (ngSubmit)="register()" class="container mt-5" autocomplete="off">
+    <h2 class="text-center text-primary">Sign up</h2>
+    <hr>
+    <div class="mb-3 form-floating">
+        <input formControlName="userName" 
+        [class.is-invalid]="registerForm.get('userName')?.errors 
+        && registerForm.get('userName')?.touched"
+        class="form-control" 
+        type="text" 
+        placeholder="Username" 
+        aria-label="Username" 
+        required>
+        <label for="userName">Username</label>
+        <div *ngIf="registerForm.get('userName')?.hasError('required')"
+        class="invalid-feedback text-start">Please enter a username.</div>
+    </div>
+    <div class="mb-3 form-floating">
+        <input formControlName="firstName" 
+        [class.is-invalid]="registerForm.get('firstName')?.errors 
+        && registerForm.get('firstName')?.touched"
+        class="form-control" 
+        type="text" 
+        placeholder="Email" 
+        aria-label="Email" 
+        required>
+        <label for="firstName">First Name</label>
+        <div *ngIf="registerForm.get('firstName')?.hasError('required')"
+        class="invalid-feedback text-start">Please enter a first name.</div>
+    </div>
+    <div class="mb-3 form-floating">
+        <input formControlName="lastName" 
+        [class.is-invalid]="registerForm.get('lastName')?.errors 
+        && registerForm.get('lastName')?.touched"
+        class="form-control" 
+        type="text" 
+        placeholder="Email" 
+        aria-label="Email" 
+        required>
+        <label for="lastName">Last Name</label>
+        <div *ngIf="registerForm.get('lastName')?.hasError('required')"
+        class="invalid-feedback text-start">Please enter a last name.</div>
+    </div>
+    <div class="mb-3 form-floating">
+        <input formControlName="email" 
+        [class.is-invalid]="registerForm.get('email')?.errors 
+        && registerForm.get('email')?.touched"
+        class="form-control" 
+        type="text" 
+        placeholder="Email" 
+        aria-label="Email" 
+        required>
+        <label for="email">Email</label>
+        <div *ngIf="registerForm.get('email')?.hasError('required')"
+        class="invalid-feedback text-start">Please enter an email address.</div>
+        <div *ngIf="registerForm.get('email')?.hasError('email')"
+        class="invalid-feedback text-start">This is not a valid email address.</div>
+    </div>
+    <div class="mb-3 form-floating">
+        <input formControlName="password" 
+        [class.is-invalid]="registerForm.get('password')?.errors 
+        && registerForm.get('password')?.touched"
+        class="form-control" 
+        type="password" 
+        placeholder="Password" 
+        aria-label="Password" 
+        required>
+        <label for="password">Password</label>
+        <div *ngIf="registerForm.get('password')?.hasError('required')"
+        class="invalid-feedback text-start">Please enter a password.</div>
+        <div *ngIf="registerForm.get('password')?.hasError('minlength')"
+        class="invalid-feedback text-start">Password must be at least 6 characters.</div>
+        <div *ngIf="registerForm.get('password')?.hasError('maxlength')"
+        class="invalid-feedback text-start">Password must be at most 20 characters.</div>
+    </div>
+    <div class="mb-3 form-floating">
+        <input formControlName="confirmPassword" 
+        [class.is-invalid]="registerForm.get('confirmPassword')?.errors 
+        && registerForm.get('confirmPassword')?.touched"
+        class="form-control" 
+        type="password" 
+        placeholder="Confirm Password" 
+        aria-label="Confirm Password" 
+        required>
+        <label for="confirmPassword">Confirm Password</label>
+        <div *ngIf="registerForm.get('confirmPassword')?.hasError('required')"
+        class="invalid-feedback text-start">Please confirm your password.</div>
+        <div *ngIf="registerForm.get('confirmPassword')?.hasError('isMatching')"
+        class="invalid-feedback text-start">Passwords do not match.</div>
+    </div> 
+    @if (validationErrors) {
+        <div class="alert alert-danger">
+            <ul>
+                @for (error of validationErrors; track $index) {
+                    <li >{{error}}</li>
+                }
+            </ul>
+        </div>
+    }
+    <div class="form-group text-center">
+        <button [disabled]="registerForm.invalid" class="btn btn-success me-2" type="submit">Register</button>
+        <button class="btn btn-default me-2" (click)="cancel()" type="button">Cancel</button>
+    </div>
+</form> 

@@ -1,0 +1,7 @@
+#userList li {
+    cursor: pointer;
+}
+
+#userList li p {
+    pointer-events: none;
+}

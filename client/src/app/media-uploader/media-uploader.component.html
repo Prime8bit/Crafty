@@ -1,0 +1,196 @@
+<div class="row border p-3">
+    <div class="row">
+        <div class="col-md-3">
+            <h5>Select files</h5>
+
+            <div ng2FileDrop [ngClass]="{'nv-file-over': hasBaseDropZoneOver}" (fileOver)="fileOverBase($event)"
+                [uploader]="uploader" class="well my-drop-zone">
+                <i class="fa fa-upload fa-2x"></i>
+                Drop Files Here
+            </div>
+
+            Upload Media
+            <input class="mt-3" type="file" ng2FileSelect [uploader]="uploader"
+                multiple accept="{{acceptTypes}}" />
+        </div>
+
+        <div class="col-md-9">
+
+            <h5>Upload queue</h5>
+            <p>Queue length: {{ uploader.queue.length }}</p>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th width="50%">Name</th>
+                        <th>Size</th>
+                        <th>Progress</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of uploader.queue">
+                        <td><strong>{{ item?.file?.name }}</strong></td>
+                        <td *ngIf="uploader.options.isHTML5" nowrap>{{ item?.file?.size/1024/1024 | number:'.2' }} MB
+                        </td>
+                        <td *ngIf="uploader.options.isHTML5">
+                            <div class="progress" style="margin-bottom: 0;">
+                                <div class="progress-bar" role="progressbar"
+                                    [ngStyle]="{ 'width': item?.progress + '%' }">
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span *ngIf="item?.isSuccess"><i class="fa fa-check-circle"></i></span>
+                            <span *ngIf="item?.isCancel"><i class="fa fa-ban"></i></span>
+                            <span *ngIf="item?.isError"><i class="fa fa-minus-circle"></i></span>
+                        </td>
+                        <td nowrap>
+                            <div class="btn-group d-flex">
+                                <!-- I prefer that the user upload everything at once or not at all
+                                <button type="button" class="btn btn-success btn-xs" (click)="item?.upload()"
+                                    [disabled]="item?.isReady || item?.isUploading || item?.isSuccess">
+                                    <span class="fa fa-cloud-upload"></span> Upload
+                                </button>
+                                -->
+                                <!-- Cancelling doesn't work with my custom backend. I am removing it.
+                                <button type="button" class="btn btn-warning btn-xs" (click)="item?.cancel()"
+                                    [disabled]="!item?.isUploading">
+                                    <span class="fa fa-ban"></span> Cancel
+                                </button> -->
+                                <button type="button" class="btn btn-danger btn-xs" (click)="deleteTempMedia(item)">
+                                    <span class="fa fa-trash"></span> Remove
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div>
+                <div>
+                    Queue progress:
+                    <div class="progress mt-2">
+                        <div class="progress-bar" role="progressbar" [ngStyle]="{ 'width': uploader.progress + '%' }">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group d-flex w-50 mt-3">
+                    <button type="button" class="btn btn-success btn-s" (click)="uploader.uploadAll()"
+                        [disabled]="!uploader.getNotUploadedItems().length">
+                        <span class="fa fa-cloud-upload"></span> Upload all
+                    </button>
+                    <!-- Cancelling doesn't work with my custom backend. I am removing it.
+                    <button type="button" class="btn btn-warning btn-s" (click)="uploader.cancelAll()"
+                        [disabled]="!uploader.isUploading">
+                        <span class="fa fa-ban"></span> Cancel all
+                    </button> -->
+                    <button type="button" class="btn btn-danger btn-s" (click)="deleteAllTempMedias()"
+                        [disabled]="!uploader.queue.length">
+                        <span class="fa fa-trash"></span> Remove all
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr style="margin-top: 20px;"/>
+    
+    <h3>Preview Items:</h3>
+    <div class="flex-container mt-2" style="display: flex; flex-wrap: wrap;">
+        <!-- the track parameter should be something unique that doesn't change, like cloudId. This helps angular be effcient when updating list items-->
+        @for(media of tempMedias; track media.cloudId) {
+            <div class="image-container border m-2 p-2 flex-column" style="width: 190px; height: 190px;">
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center h-100 w-100">
+                    @if (media.type === MediaType.Video) {
+                        <video 
+                        class="mediaItem videoItem" 
+                        style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                        part="video" 
+                        playsinline="" 
+                        muted="" 
+                        src="{{media.url}}" 
+                        preload="auto" 
+                        controls>
+                            <track kind="metadata" label="cuepoints" data-removeondestroy="">
+                            Video {{media.id}}
+                        </video>
+                    } @else if (media.type == MediaType.Model3d) {
+                        <app-model3d-viewer [modelUrl]=media.url></app-model3d-viewer>
+                    } @else {
+                        <img 
+                        src="{{media.url}}" 
+                        class="mb-1"
+                        style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                        alt="Image {{media.id}}">
+                    }
+                </div>
+            </div>
+        }      
+    </div>
+    <h3>Uploaded Items:</h3>
+    <div class="flex-container mt-2" style="display: flex; flex-wrap: wrap;">
+        <!-- the track parameter should be something unique that doesn't change, like cloudId. This helps angular be effcient when updating list items-->
+        @for(media of parentCraft().medias; track media.cloudId) {
+            <div class="image-container border m-2 p-2 d-flex flex-column" style="width: 190px; height: 220px;">
+                @if (media.type === MediaType.Video) {
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-center h-100 w-100">
+                        <video 
+                        class="media videoItem" 
+                        style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                        part="video" 
+                        playsinline="" 
+                        muted="" 
+                        src="{{media.url}}" 
+                        preload="auto" 
+                        controls>
+                            <track kind="metadata" label="cuepoints" data-removeondestroy="">
+                            Video {{media.id}}
+                        </video>
+                    </div>
+                    <div class="d-flex justify-content-center gap-1 mt-1">
+                        <!-- the type must be button to prevent submitting any forms this component may be inside. -->
+                        <button 
+                            type="button" 
+                            class="btn btn-sm btn-danger" 
+                            (click)="deleteUploadedVideo(media.cloudId)"><i class="fa fa-trash"></i></button>
+                    </div>
+                } @else if (media.type == MediaType.Model3d) {
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-center h-100 w-100">
+                        <app-model3d-viewer [modelUrl]=media.url></app-model3d-viewer>
+                    </div>
+                    <div class="d-flex justify-content-center gap-1 mt-1">
+                        <!-- the type must be button to prevent submitting any forms this component may be inside. -->
+                        <button 
+                            type="button"
+                            class="btn btn-sm btn-danger" 
+                            (click)="deleteUploadedModel3d(media.cloudId)"><i class="fa fa-trash"></i></button>
+                    </div>
+                } @else {
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-center h-100 w-100">
+                        <img 
+                        src="{{media.url}}" 
+                        style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                        alt="Image {{media.id}}">
+                    </div>
+                    <div class="d-flex justify-content-center gap-1 mt-1">
+                        <!-- the type must be button to prevent submitting any forms this component may be inside. -->
+                        <button
+                            type="button"
+                            class="btn btn-sm me-1"
+                            [disabled]="media.id === parentCraft().searchImageId"
+                            (click)="setSearchImage(media.cloudId)"
+                            [ngClass]="media.id === parentCraft().searchImageId ? 'btn-success active': 'btn-outline-success'"
+                            >Main</button>
+                        <button 
+                            type="button"
+                            class="btn btn-sm btn-danger" 
+                            (click)="deleteUploadedImage(media.cloudId)"
+                            ><i class="fa fa-trash"></i></button>
+                    </div>
+                }            
+            </div>
+        }        
+    </div>
+</div>
