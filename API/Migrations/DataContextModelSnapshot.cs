@@ -27,7 +27,6 @@ namespace API.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsArchived")
@@ -160,14 +159,27 @@ namespace API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("BillingAddress")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BillingName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<long>("BuyerId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateOnly>("OrderDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("SellerId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("ShippingAddress")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ShippingName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
@@ -178,8 +190,6 @@ namespace API.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BuyerId");
-
-                    b.HasIndex("SellerId");
 
                     b.ToTable("Orders");
                 });
@@ -205,11 +215,19 @@ namespace API.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long>("SellerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CraftId");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("SellerId");
 
                     b.ToTable("OrderItem");
                 });
@@ -302,6 +320,9 @@ namespace API.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long>("ProfileImageId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("TEXT");
 
@@ -353,13 +374,13 @@ namespace API.Migrations
 
             modelBuilder.Entity("API.Entities.WishlistItem", b =>
                 {
-                    b.Property<long>("WishListedCraftId")
+                    b.Property<long>("WishlistedCraftId")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("WishlistingUserId")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("WishListedCraftId", "WishlistingUserId");
+                    b.HasKey("WishlistedCraftId", "WishlistingUserId");
 
                     b.HasIndex("WishlistingUserId");
 
@@ -530,15 +551,7 @@ namespace API.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.User", "Seller")
-                        .WithMany("OrdersAsSeller")
-                        .HasForeignKey("SellerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Buyer");
-
-                    b.Navigation("Seller");
                 });
 
             modelBuilder.Entity("API.Entities.OrderItem", b =>
@@ -555,9 +568,17 @@ namespace API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("API.Entities.User", "Seller")
+                        .WithMany("OrderItemsAsSeller")
+                        .HasForeignKey("SellerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Craft");
 
                     b.Navigation("Order");
+
+                    b.Navigation("Seller");
                 });
 
             modelBuilder.Entity("API.Entities.UserMedia", b =>
@@ -573,9 +594,9 @@ namespace API.Migrations
 
             modelBuilder.Entity("API.Entities.WishlistItem", b =>
                 {
-                    b.HasOne("API.Entities.Craft", "WishListedCraft")
+                    b.HasOne("API.Entities.Craft", "WishlistedCraft")
                         .WithMany()
-                        .HasForeignKey("WishListedCraftId")
+                        .HasForeignKey("WishlistedCraftId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -585,7 +606,7 @@ namespace API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("WishListedCraft");
+                    b.Navigation("WishlistedCraft");
 
                     b.Navigation("WishlistingUser");
                 });
@@ -664,14 +685,13 @@ namespace API.Migrations
 
                     b.Navigation("MessagesSent");
 
-                    b.Navigation("OrdersAsBuyer");
+                    b.Navigation("OrderItemsAsSeller");
 
-                    b.Navigation("OrdersAsSeller");
+                    b.Navigation("OrdersAsBuyer");
 
                     b.Navigation("Products");
 
-                    b.Navigation("ProfileImage")
-                        .IsRequired();
+                    b.Navigation("ProfileImage");
                 });
 #pragma warning restore 612, 618
         }

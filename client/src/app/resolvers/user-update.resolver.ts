@@ -9,9 +9,9 @@ export const UserUpdateResolver: ResolveFn<User | null> = (route, state) => {
     const accountService = inject(AccountService);
         
     const user = accountService.currentUser();
-    if (!user?.userName) {
+    if (!user?.userId) {
         return null;
     }
 
-    return userService.getUser(user.userName);
+    return userService.getUser(user.userId);
 };

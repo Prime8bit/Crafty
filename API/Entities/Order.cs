@@ -1,41 +1,24 @@
+using CraftyCommon.DTOs;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace API.Entities;
 
-
-public enum OrderStatus
-{
-    // I add explicit numeric values so even if I remove or add items in this enum,
-    // The database will still continue to work as expected.
-    None = 0,
-    Pending = 1,
-    PaymentReceived = 2,
-    Shipped = 3,
-    Delivered = 4,
-    Cancelled = 5
-}
-
-[Table("Orders")]
 public class Order
 {
     public long Id { get; set; }
     public DateOnly OrderDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
-    public float TotalPrice { get; set; }
-    public OrderStatus Status { get; set; } = OrderStatus.Pending;
+    public float TotalPrice { get; set; } = 0f;
+    public required string ShippingName { get; set; }
+    public required string ShippingAddress { get; set; }
+    public required string BillingName { get; set; }
+    public required string BillingAddress { get; set; }
+    public required OrderStatus Status { get; set; }
     
     // Navigation Properties
-
-    // This needs to be set to the null forgiving operator for entity framework to
-    // set the SQL property to not null.
-    public required long SellerId { get; set;}
-    // This needs to be set to the null forgiving operator for entity framework to
-    // set the SQL property to not null.
-    public User Seller { get; set; } = null!;
     // Entity framework requires a separate property for the ID
-    public required long BuyerId { get; set;}
-    // Entity framework requires a separate property for the ID
-    public User Buyer { get; set; } = null!;
+    public long BuyerId { get; set;}
+    public User? Buyer { get; set; }
     
     public ICollection<OrderItem> OrderItems { get; } = new List<OrderItem>();
 }

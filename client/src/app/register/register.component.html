@@ -1,4 +1,7 @@
-<form [formGroup]="registerForm" (ngSubmit)="register()" class="container mt-5" autocomplete="off">
+<form [formGroup]="registerForm" 
+    (ngSubmit)="register()" 
+    class="container mt-5" 
+    autocomplete="off">
     <h2 class="text-center text-primary">Sign up</h2>
     <hr>
     <div class="mb-3 form-floating">
@@ -11,8 +14,9 @@
         aria-label="Username" 
         required>
         <label for="userName">Username</label>
-        <div *ngIf="registerForm.get('userName')?.hasError('required')"
-        class="invalid-feedback text-start">Please enter a username.</div>
+        @if (registerForm.get('userName')?.hasError('required')) {
+            <div class="invalid-feedback text-start">Please enter a username.</div>
+        }
     </div>
     <div class="mb-3 form-floating">
         <input formControlName="firstName" 

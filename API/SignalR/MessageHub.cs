@@ -1,8 +1,8 @@
 using API.Data;
-using API.DTOs;
 using API.Entities;
 using API.Misc;
 using API.Pagination;
+using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.SignalR;
 
 namespace API.SignalR;
@@ -11,7 +11,8 @@ public enum MessageHubMessages
 {
     SendMessage,
     ReceiveMessageThread,
-    UpdatedGroup
+    UpdatedGroup,
+    DeleteMessage
 }
 
 public class MessageHubException : Exception
@@ -60,7 +61,10 @@ public class MessageHub(IMessageManager messageManager) : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var groupDto = await RemoveFromMessageGroup();
-        await Clients.Group(groupDto.Name).SendAsync(MessageHubMessages.UpdatedGroup.ToString());
+        if (groupDto != null)
+        {
+            await Clients.Group(groupDto.Name).SendAsync(MessageHubMessages.UpdatedGroup.ToString());
+        }
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -94,57 +98,72 @@ public class MessageHub(IMessageManager messageManager) : Hub
         await Clients.Group(groupName).SendAsync(MessageHubMessages.SendMessage.ToString(), response.Data);
     }
 
+    public async Task DeleteMessage(long messageId)
+    {
+        var senderIdStr = Context.UserIdentifier;
+        long senderId;
+        var group = await messageManager.GetMessageGroupForConnection(Context.ConnectionId);
+
+        if (string.IsNullOrEmpty(senderIdStr) 
+            || long.TryParse(senderIdStr, out senderId) == false
+            || group == null)
+        {
+            throw new MessageHubException("You must be logged in to delete a message.");
+        }
+
+        var response = await messageManager.DeleteMessage(senderId, messageId);
+        
+        // A delete technically succeeds if there is nothing to delete so NotFound is ok.
+        if (response.ResponseType != ManagerResponseType.Ok 
+            && response.ResponseType != ManagerResponseType.NotFound)
+        {
+            throw new MessageHubException($"Message deletion failed:\n{string.Join('\n', response.ErrorMessages)}");
+        }
+
+        await Clients.Caller.SendAsync(MessageHubMessages.DeleteMessage.ToString(), messageId);
+    }
+
     private string GetGroupName(long senderId, long recipientId)
     {
         return senderId < recipientId ? $"{senderId}-{recipientId}" : $"{recipientId}-{senderId}";
     }
 
     private async Task<MessageGroupDto> AddToGroup(string groupName)
-    {        
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-
+    {
         long userId;
         if (Context.UserIdentifier == null || !long.TryParse(Context.UserIdentifier, out userId))
         {
             throw new Exception ("Unable to get user id.");
         }
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
         var connection = new MessageConnection{ 
             Id = Context.ConnectionId, 
             MessageGroupName = groupName,
             UserId = userId 
             };
-
+            
         var updateGroupResponse = await messageManager.AddConnectionToMessageGroup(groupName, connection);
 
-        if (updateGroupResponse.Data != null)
+        if (updateGroupResponse.Data == null)
         {
-            return updateGroupResponse.Data;
-        }
-        else if (updateGroupResponse.ResponseType == ManagerResponseType.NotFound)
-        {            
-            var group = new MessageGroup { Name = groupName };
-            group.Connections.Add(connection);
-            var response = await messageManager.AddMessageGroup(group);
-            if (response.Data != null)
-            {
-                return response.Data;
-            }
+            throw new HubException($"Failed to join group {groupName}.");
         }
 
-        throw new HubException($"Failed to join group {groupName}.");
+        return updateGroupResponse.Data;
     }
     
-    private async Task<MessageGroupDto> RemoveFromMessageGroup()
+    private async Task<MessageGroupDto?> RemoveFromMessageGroup()
     {
-        var group = await messageManager.GetMessageGroupForConnection(Context.ConnectionId);
-        var connection = group?.Connections.FirstOrDefault(connection => connection.Id == Context.ConnectionId);
-        if (connection != null 
-            && group != null 
-            && await messageManager.RemoveMessageConnection(connection.Id))
+        var groupResponse = await messageManager.RemoveMessageConnection(Context.ConnectionId);
+        // It is ok if the group response fails from a NotFound error. This is likely due to a refresh of the browser
+        // page causing multiple disconnect requests simultaneously.
+        if (groupResponse.ResponseType != ManagerResponseType.Ok 
+            && groupResponse.ResponseType != ManagerResponseType.NotFound)
         {
-            return group;
+            throw new HubException(string.Join('\n', groupResponse.ErrorMessages));
         }
 
-        throw new HubException("Failed to remove from group.");
+        return groupResponse.Data;
     }
 }

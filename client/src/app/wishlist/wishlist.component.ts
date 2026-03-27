@@ -54,7 +54,7 @@ export class WishlistComponent implements OnInit {
         }
     }
 
-    pageChanged(event: any) {
+    pageChanged(event: any): void {
         if (this.pageNumber !== event.page) {
             this.pageNumber = event.page;
             this.loadWishlist(); 

@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { UserToken } from '../models/user-token';
-import { map } from 'rxjs';
+import { UserLoginRequest, UserToken } from '../models/user-login';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { WishlistService } from './wishlist.service';
+import { OrderService } from './order.service';
 
 @Injectable({
     providedIn: 'root'
@@ -23,17 +24,18 @@ export class AccountService {
         return [];
     });
 
-    login (model: any) {
+    login(model: UserLoginRequest): Observable<UserToken> {
         return this.http.post<UserToken>(`${this.baseUrl}accounts/login`, model).pipe(
             map((user: UserToken) => {
                 if (user) {
                     this.setCurrentUser(user);
                 }
+                return user;
             }
         ));
     }
 
-    register (model: any) {
+    register(model: any): Observable<UserToken> {
         return this.http.post<UserToken>(`${this.baseUrl}accounts/register`, model).pipe(
             map((user: UserToken) => {
                 if (user) {
@@ -44,15 +46,25 @@ export class AccountService {
         ));
     }
 
-    logout () {        
+    logout(): void {        
         localStorage.removeItem('user');
         this.currentUser.set(null);
     }
 
-    setCurrentUser(userToken: UserToken) {
-        localStorage.setItem('user', JSON.stringify(userToken));
-        this.currentUser.set(userToken);
+    setCurrentUser(userLoginResponse: UserToken): void {
+        localStorage.setItem('user', JSON.stringify(userLoginResponse));
+        this.currentUser.set(userLoginResponse);
         // Cache the users wishlist.
         this.wishlistService.getWishlistIds();
+    }
+
+    loadUserFromStorage(): void {
+        const userString = localStorage.getItem('user');
+        if (!userString) {
+            return;
+        }
+
+        const user = JSON.parse(userString);
+        this.setCurrentUser(user);
     }
 }

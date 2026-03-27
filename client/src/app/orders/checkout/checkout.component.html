@@ -1,0 +1,119 @@
+@if (order) {
+    <form [formGroup]="checkoutForm"
+        (ngSubmit)="submitOrder()"
+        class="container mt-5"
+        autocomplete="off">
+    <div class="container py-5">
+        <h1>Checkout</h1>
+        <div class="row">
+            <div class="col-8">
+                <p>Shipping Name:</p>
+                <input formControlName="shippingName"
+                    [class.is-invalid]="checkoutForm.get('shippingName')?.errors 
+                    && checkoutForm.get('shippingName')?.touched"
+                    class="form-control"
+                    type="text"
+                    required>
+                @if (checkoutForm.get('shippingName')?.hasError('required')) {
+                    <div class="invalid-feedback text-start">Please enter a shipping name.</div>
+                }
+                <p class="mt-3">Shipping Address:</p>
+                <input formControlName="shippingAddress"
+                    [class.is-invalid]="checkoutForm.get('shippingAddress')?.errors 
+                    && checkoutForm.get('shippingAddress')?.touched"
+                    class="form-control"
+                    type="text"
+                    required>
+                @if (checkoutForm.get('shippingAddress')?.hasError('required')) {
+                    <div class="invalid-feedback text-start">Please enter a shipping address.</div>
+                }
+                <p class="mt-3">Billing Name:</p>
+                <input formControlName="billingName"
+                    [class.is-invalid]="checkoutForm.get('billingName')?.errors 
+                    && checkoutForm.get('billingName')?.touched"
+                    class="form-control"
+                    type="text"
+                    required>
+                @if (checkoutForm.get('billingName')?.hasError('required')) {
+                    <div class="invalid-feedback text-start">Please enter a billing name.</div>
+                }
+                <p class="mt-3">Billing Address:</p>
+                <input formControlName="billingAddress"
+                    [class.is-invalid]="checkoutForm.get('billingAddress')?.errors 
+                    && checkoutForm.get('billingAddress')?.touched"
+                    class="form-control"
+                    type="text"
+                    required>
+                @if (checkoutForm.get('shippingAddress')?.hasError('required')) {
+                    <div class="invalid-feedback text-start">Please enter a shipping address.</div>
+                } 
+                <div class="row mb-3">
+                    <div class="col-8">
+                        <p class="mt-3">Card Number:</p>
+                        <input formControlName="cardNumber"
+                            [class.is-invalid]="checkoutForm.get('cardNumber')?.errors 
+                            && checkoutForm.get('cardNumber')?.touched"
+                            class="form-control"
+                            type="text"
+                            required>
+                        @if (checkoutForm.get('cardNumber')?.hasError('required')) {
+                            <div class="invalid-feedback text-start">Please enter a card number.</div>
+                        } 
+                    </div>
+                    <div class="col-4">
+                        <p class="mt-3">CCV:</p>
+                        <input formControlName="ccv"
+                            [class.is-invalid]="checkoutForm.get('ccv')?.errors 
+                            && checkoutForm.get('ccv')?.touched"
+                            class="form-control"
+                            type="text"
+                            required>
+                        @if (checkoutForm.get('ccv')?.hasError('required')) {
+                            <div class="invalid-feedback text-start">Please enter a card ccv.</div>
+                        } 
+                    </div>
+                </div>         
+                <div class="d-flex flex-row justify-content-between">
+                    <!-- I can't just use routerlink or this button will trigger the form validation
+                        and refuse to go back the first time it is clicked.-->
+                    <button type="button" class="btn btn-primary" (click)="backToCart()">
+                        <i class="fa fa-arrow-left me-2"></i>Cart
+                    </button>
+                    <button 
+                        class="btn btn-success" 
+                        type="submit"
+                        [disabled]="checkoutForm.invalid"
+                        >Place Order</button>
+                </div>
+            </div>
+            <div class="col-4">
+                <!-- Cart Summary -->
+                <div class="card cart-summary">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Order Summary</h5>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Subtotal</span>
+                            <span>{{order.totalPrice | currency: 'USD'}}</span>
+                        </div>
+                        <!-- For this portfolio piece, I am not calculating shipping or tax. I am just hardcoding fake values. -->
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Shipping</span>
+                            <span>$10.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Tax</span>
+                            <span>{{order.totalPrice * 0.07 | currency: 'USD'}}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <strong>Total</strong>
+                            <strong>{{1.07 * order.totalPrice + 10.0 | currency: 'USD'}}</strong>
+                        </div>
+                        <!-- <button class="btn btn-primary w-100">Proceed to Checkout</button> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+}

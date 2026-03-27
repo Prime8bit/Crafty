@@ -7,6 +7,7 @@ import { ToastrService } from 'ngx-toastr';
 import { AccountService } from '../../services/account.service';
 import { CraftService } from '../../services/craft.service';
 import { Model3dViewerComponent } from '../../model3d-viewer/model3d-viewer.component';
+import { OrderService } from '../../services/order.service';
 
 @Component({
     selector: 'app-craft-card',
@@ -24,12 +25,13 @@ export class CraftCardComponent {
     private toastr = inject(ToastrService);
     private craftService = inject(CraftService);
     accountService = inject(AccountService);
+    orderService = inject(OrderService);
 
     craft = input.required<Craft>();
 
     isWishlisted = computed(() => this.wishlistService.wishlistIds().includes(this.craft().id));
 
-    toggleWishlist() {
+    toggleWishlist(): void {
         this.wishlistService.toggleWishlist(this.craft().id).subscribe({
             next: () => {
                 if (this.isWishlisted()) {
@@ -45,12 +47,12 @@ export class CraftCardComponent {
         })
     }
 
-    archiveCraft() {
+    archiveCraft(): void {
         if (this.craft().isArchived) {
             return;
         }
 
-        if (this.accountService.currentUser()?.userName !== this.craft().sellerUserName) {
+        if (this.accountService.currentUser()?.userId !== this.craft().sellerId) {
             this.toastr.error("You cannot archive a craft that you don't produce.");
         }
 

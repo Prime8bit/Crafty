@@ -1,13 +1,19 @@
 using API.Data.Configuration;
-using API.DTOs;
 using API.Entities;
 using API.Misc;
 using API.Pagination;
+using CraftyCommon.DTOs;
+using Mapster;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data;
 
-public class CraftManager(DataContext context, ICraftyUserManager userManager) : ICraftManager
+public class CraftManager(
+    DataContext context, 
+    ICraftyUserManager craftyUserManager,
+    UserManager<User> userManager
+    ) : ICraftManager
 {
     public async Task<CraftDto?> GetCraftAsync(long id)
     {
@@ -17,7 +23,7 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
             .Include(craft => craft.SearchImage)
             .Include(craft => craft.Medias)
             .Where(craft => craft.Id == id)
-            .Select(craft => new CraftDto(craft))
+            .ProjectToType<CraftDto>()
             .SingleOrDefaultAsync();
     }
 
@@ -25,6 +31,7 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
     {
         // Remember that filtering with .Where must be done before joining with .Include.Select. ASP.NET is picky like that.
         var query = context.Crafts
+            .Include( craft => craft.Seller)
             .Where( craft => craft.Price >= craftListParams.MinPrice 
             && craft.Price <= craftListParams.MaxPrice);
 
@@ -51,12 +58,14 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
             .Select(craft => new CraftDto()
             {
                 Id = craft.Id,
+                SellerId = craft.SellerId,
+                SellerDisplayName = craft.Seller == null ? null : craft.Seller.DisplayName,
                 Name = craft.Name,
                 Price = craft.Price,
                 Stock = craft.Stock,
                 CreatedAt = craft.CreatedAt.ToString("o"),
                 SearchImageId = craft.SearchImageId,
-                SearchImage = craft.SearchImage == null ? null : new CraftMediaDto(craft.SearchImage),
+                SearchImage = craft.SearchImage == null ? null : craft.SearchImage.Adapt<CraftMediaDto>(),
                 IsArchived = craft.IsArchived
                 // I intentionally leave out the Media collection here since the list endpoint doesn't need it, and it would be a waste of resources to include it.            
             });
@@ -81,35 +90,35 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
 
         CraftMedia? searchImage = null;
 
-        foreach (var mediaItemDto in craftDto.Medias)
+        foreach (var mediaDto in craftDto.Medias)
         {
             // I don't need to set craft or craftID because EF will do that for me.
-            var newMediaItem = new CraftMedia()
+            var newMedia = new CraftMedia()
             {
-                Url = mediaItemDto.Url ?? "",
-                CloudId = mediaItemDto.CloudId ?? "",
-                Type = mediaItemDto.Type
+                Url = mediaDto.Url ?? "",
+                CloudId = mediaDto.CloudId ?? "",
+                Type = mediaDto.Type
             };
-            newCraft.Medias.Add(newMediaItem);
-            // For new craftMediaItems, the Id will be negative. This ensures that they are unique from existing craftMediaItems and from all other new craftMediaItems.
+            newCraft.Medias.Add(newMedia);
+            // For new craftMedias, the Id will be negative. This ensures that they are unique from existing craftMedias and from all other new craftMedias.
             // These ID's should be ignored by the backend code so they are assigned database ID's appropriately.
             // Alternatively, I could have just used the cloudID, but then I would need to parse it as a string to a long when assigning existing media items to the search media
             // This seemed a bit cleaner.
-            if (craftDto.SearchImageId == mediaItemDto.Id)
+            if (craftDto.SearchImageId == mediaDto.Id)
             {
-                if (newMediaItem.Type != MediaType.Image)
+                if (newMedia.Type != MediaType.Image)
                 {                    
                     return new ManagerResponse<CraftDto>()
                     {
                         ResponseType = ManagerResponseType.BadRequest,
-                        ErrorMessages = [$"The main image of a craft must be an image. You chose a {newMediaItem.Type}"]
+                        ErrorMessages = [$"The main image of a craft must be an image. You chose a {newMedia.Type}"]
                     };
                 }
-                searchImage = newMediaItem;
+                searchImage = newMedia;
             }
         }
 
-        var response = await userManager.AddCraftToSellerAsync(craftDto.SellerUserName!, newCraft);
+        var response = await craftyUserManager.AddCraftToSellerAsync(craftDto.SellerId, newCraft);
         if (response.ResponseType != ManagerResponseType.Ok)
         {
             return new ManagerResponse<CraftDto>()
@@ -120,7 +129,7 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
         }
 
         // I need to set the SearchImageId after saving to prevent a circular depency issue in EF. 
-        // This is because the SearchImageId foreign key references the CraftMediaItem, which is in the same collection as the SearchImage navigation property.
+        // This is because the SearchImageId foreign key references the CraftMedia, which is in the same collection as the SearchImage navigation property.
         if (await context.SaveChangesAsync() == 0)
         {
             return new ManagerResponse<CraftDto>()
@@ -144,12 +153,12 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
             }
         }
 
-        return new ManagerResponse<CraftDto>(new CraftDto(newCraft));
+        return new ManagerResponse<CraftDto>(newCraft.Adapt<CraftDto>());
     }
 
     public async Task<ManagerResponse<CraftDto>> UpdateCraftAsync(long userId, CraftDto craftDto)
     {        
-        var user = await userManager.GetUserAsync(userId);
+        var user = await userManager.FindByIdAsync(userId.ToString());
         
         if (user == null)
         {
@@ -173,13 +182,13 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
             };
         }
 
-        if (craft.SellerId != user.Id)
+        if (craft.SellerId != userId)
         {
             return new ManagerResponse<CraftDto>() { ResponseType = ManagerResponseType.Forbidden };
         }
 
-        if ( craftDto.SellerUserName?.ToUpper() != craft.Seller.NormalizedUserName
-            || craftDto.SellerUserName?.ToUpper() != user.UserName?.ToUpper())
+        if ( craftDto.SellerId != craft.SellerId
+            || craftDto.SellerId != userId)
         {
             return new ManagerResponse<CraftDto>()
             {
@@ -227,21 +236,21 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
         
         // Now add any new items.
         var mediaDict = craft.Medias.Where(item => item.CloudId != null).ToDictionary(item => item.CloudId!, item => item);
-        var newMediaDtos = craftDto.Medias.Where(mediaItem => mediaItem.CloudId != null && !mediaDict.ContainsKey(mediaItem.CloudId));
-        foreach (var mediaItemDto in newMediaDtos)
+        var newMediaDtos = craftDto.Medias.Where(media => media.CloudId != null && !mediaDict.ContainsKey(media.CloudId));
+        foreach (var mediaDto in newMediaDtos)
         {
-            var newCraftMediaItem = new CraftMedia()
+            var newCraftMedia = new CraftMedia()
             {
-                Url = mediaItemDto.Url ?? "",
-                CloudId = mediaItemDto.CloudId ?? "",
-                Type = mediaItemDto.Type
+                Url = mediaDto.Url ?? "",
+                CloudId = mediaDto.CloudId ?? "",
+                Type = mediaDto.Type
             };
             // I don't need to set craft or craftID because EF will do that for me.
-            craft.Medias.Add(newCraftMediaItem);
+            craft.Medias.Add(newCraftMedia);
             
-            if (craftDto.SearchImageId == mediaItemDto.Id)
+            if (craftDto.SearchImageId == mediaDto.Id)
             {
-                newSearchImage = newCraftMediaItem;
+                newSearchImage = newCraftMedia;
             }
         }
 
@@ -271,7 +280,7 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
     
     public async Task<ManagerResponse<CraftDto>> ArchiveCraftAsync(long userId, long craftId)
     {
-        var user = await userManager.GetUserAsync(userId);
+        var user = userManager.FindByIdAsync(userId.ToString());
         
         if (user == null)
         {
@@ -295,7 +304,7 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
             };
         }
 
-        if (craft.SellerId != userId && !await userManager.IsUserInRoleAsync(userId, Role.Admin))
+        if (craft.SellerId != userId && !await craftyUserManager.IsUserInRoleAsync(userId, Role.Admin))
         {
             return new ManagerResponse<CraftDto>()
             {
@@ -315,12 +324,12 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
             };
         }
 
-        return new ManagerResponse<CraftDto>(new CraftDto(craft));
+        return new ManagerResponse<CraftDto>(craft.Adapt<CraftDto>());
     }
 
     public async Task<ManagerResponse> MarkCraftAsInappropriateAsync(long userId, long craftId)
     {
-        var user = await userManager.GetUserAsync(userId);
+        var user = await userManager.FindByIdAsync(userId.ToString());
         
         if (user == null)
         {
@@ -364,7 +373,7 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
             };
         }
 
-        return new ManagerResponse<CraftDto>(new CraftDto(craft));
+        return new ManagerResponse<CraftDto>(craft.Adapt<CraftDto>());
     }
 
     public async Task<ManagerResponse> MarkCraftAsAppropriateAsync(long craftId)
@@ -393,7 +402,7 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
             };
         }
 
-        return new ManagerResponse<CraftDto>(new CraftDto(craft));
+        return new ManagerResponse<CraftDto>(craft.Adapt<CraftDto>());
     }
 
     public async Task<PagedList<CraftDto>> GetInappropriateCraftsAsync(PaginationParams paginationParams)
@@ -406,10 +415,10 @@ public class CraftManager(DataContext context, ICraftyUserManager userManager) :
                 Price = craft.Price,
                 Stock = craft.Stock,
                 CreatedAt = craft.CreatedAt.ToString("o"),
-                SellerDisplayName = craft.Seller.DisplayName,
-                SellerUserName = craft.Seller.UserName,
+                SellerDisplayName = craft.Seller == null ? null : craft.Seller.DisplayName,
+                SellerId = craft.SellerId,
                 SearchImageId = craft.SearchImageId,
-                SearchImage = craft.SearchImage == null ? null : new CraftMediaDto(craft.SearchImage),
+                SearchImage = craft.SearchImage == null ? null : craft.SearchImage.Adapt<CraftMediaDto>(),
                 IsArchived = craft.IsArchived
                 // I intentionally leave out the Media collection here since the list endpoint doesn't need it, and it would be a waste of resources to include it.            
             });

@@ -2,8 +2,9 @@ namespace API.Entities;
 
 public class WishlistItem
 {
-    public User WishlistingUser { get; set; } = null!;
+    // Navigation properties
     public long WishlistingUserId { get; set; }
-    public Craft WishListedCraft { get; set; } = null!;
-    public long WishListedCraftId { get; set; }
+    public User? WishlistingUser { get; set; }
+    public long WishlistedCraftId { get; set; }
+    public Craft? WishlistedCraft { get; set; }
 }

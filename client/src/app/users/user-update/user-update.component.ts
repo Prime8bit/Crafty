@@ -8,7 +8,7 @@ import { CraftCardComponent } from '../../crafts/craft-card/craft-card.component
 import { DatePipe } from '@angular/common';
 import { ProfileImageUploaderComponent } from '../profile-image-uploader/profile-image-uploader.component';
 import { TabDirective, TabsetComponent, TabsModule } from 'ngx-bootstrap/tabs';
-import { OrderListComponent } from '../../order-list/order-list.component';
+import { OrderListComponent } from '../../orders/order-list/order-list.component';
 import { WishlistComponent } from '../../wishlist/wishlist.component';
 
 
@@ -56,8 +56,7 @@ export class UserUpdateComponent implements OnInit {
         });
     }
 
-    updateUser()
-    {   
+    updateUser(): void {   
         if (this.user === undefined) {
             return;
         }
@@ -70,7 +69,7 @@ export class UserUpdateComponent implements OnInit {
         });
     }
 
-    selectTab(heading: string) {
+    selectTab(heading: string): void {
         if (this.tabset) {
             const tab = this.tabset.tabs.find(curTab => curTab.heading === heading);
             if (tab)
@@ -80,7 +79,7 @@ export class UserUpdateComponent implements OnInit {
         }
     }
 
-    onTabActivated(newTab: TabDirective) {
+    onTabActivated(newTab: TabDirective): void {
         this.activeTab = newTab;
         this.router.navigate([], {
             relativeTo: this.route,
@@ -93,7 +92,7 @@ export class UserUpdateComponent implements OnInit {
         }
     }
 
-    toggleArchivedCrafts() {
+    toggleArchivedCrafts(): void {
         this.filterArchived = !this.filterArchived;
     }
 }

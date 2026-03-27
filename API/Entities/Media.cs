@@ -1,16 +1,7 @@
+using CraftyCommon.DTOs;
 using System;
 
 namespace API.Entities;
-
-public enum MediaType
-{
-    // I add explicit numeric values so even if I remove or add items in this enum,
-    // The database will still continue to work as expected.
-    None = 0,
-    Image = 1,
-    Video = 2,
-    Model3d = 3
-}
 
 
 /// <summary>
@@ -28,11 +19,11 @@ public class Media
 public class CraftMedia : Media
 {
     public long CraftId { get; set; }
-    public Craft Craft { get; set; } = null!;
+    public Craft? Craft { get; set; }
 }
 
 public class UserMedia : Media
 {
     public long UserId { get; set; }
-    public User User { get; set; } = null!;
+    public User? User { get; set; }
 }

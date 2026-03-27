@@ -9,6 +9,7 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
 import { TokenInterceptor } from './interceptors/token.interceptor';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { LoadingInterceptor } from './interceptors/loading.interceptor';
+import { ModalModule } from 'ngx-bootstrap/modal';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -23,7 +24,8 @@ export const appConfig: ApplicationConfig = {
         provideToastr({
             positionClass: 'toast-bottom-right'
         }),
-        importProvidersFrom(NgxSpinnerModule)
+        importProvidersFrom(NgxSpinnerModule),
+        importProvidersFrom(ModalModule.forRoot())
     ]
 };
 

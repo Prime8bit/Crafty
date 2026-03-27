@@ -1,10 +1,8 @@
 using System.Security.Claims;
 using API.Data;
-using API.DTOs;
-using API.Entities;
 using API.Extensions;
-using API.Misc;
 using API.Pagination;
+using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,7 +43,7 @@ public class CraftWishlistsController (
             return NotFound("You must be logged in to edit a craft.");
         }
         
-        var craftWishlistItemDto = new CraftWishlistItemDto() { WishListedCraftId = targetCraftId, WishlistingUserId = userId };
+        var craftWishlistItemDto = new WishlistItemDto() { WishlistedCraftId = targetCraftId, WishlistingUserId = userId };
 
         return GetActionResult(await craftWishlistRepo.ToggleWishlistItemAsync(craftWishlistItemDto));
     }

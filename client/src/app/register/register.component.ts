@@ -19,13 +19,13 @@ export class RegisterComponent implements OnInit {
 
     cancelRegister = output<boolean>();
     registerForm: FormGroup = new FormGroup({});
-    validationErrors: string[] | undefined;
+    validationErrors?: string[];
     
     ngOnInit(): void {
         this.initializeForm();
     }
 
-    initializeForm() {
+    initializeForm(): void {
         this.registerForm = this.formBuilder.group({ 
             userName: ['', Validators.required],
             firstName: ['', Validators.required],
@@ -47,14 +47,14 @@ export class RegisterComponent implements OnInit {
         }
     }
 
-    register() {
+    register(): void {
         this.accountService.register(this.registerForm.value).subscribe({
             next: _ => this.router.navigateByUrl('/user/update'),
             error: (error: HttpErrorResponse) => this.validationErrors = error.error
         });
     }
 
-    cancel() {
+    cancel(): void {
         this.cancelRegister.emit(false);
     }
 }

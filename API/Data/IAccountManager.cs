@@ -1,10 +1,10 @@
-using API.DTOs;
 using API.Misc;
+using CraftyCommon.DTOs;
 
 namespace API.Data;
 
 public interface IAccountManager
 {
-    Task<ManagerResponse<UserLoginDto>> RegisterAsync(RegisterDto regDto);
-    Task<ManagerResponse<UserLoginDto>> LoginAsync(UserLoginDto loginDto);
+    Task<ManagerResponse<UserTokenDto>> RegisterAsync(RegisterDto regDto);
+    Task<ManagerResponse<UserTokenDto>> LoginAsync(UserLoginRequestDto loginDto);
 }

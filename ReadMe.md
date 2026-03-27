@@ -3,6 +3,9 @@ This is meant to be a portfolio piece for demonstrating my knowledge in C#, ASP.
 - A C#/ASP.NET/Entity Framework backend.
 - An Angular frontend.
 
+# Getting the code
+This project uses a submodule I created called CraftyCommon which you can see among my repositories. Ensure that submodules are downloaded and current when using this repository.
+
 # How to run
 The short version is that you can't without making some minor changes to the code. My application uses Cloudinary as a CDN for user-uploaded media files. Naturally I don't want people to use my code to upload inappropriate media to my cloudinary account so I have replaced my credentials with invalid ones. You can still run the application, but you will need to follow these steps:
 - Create a cloudinary account (there are free accounts with limits, but this is what I use for development)
@@ -25,8 +28,6 @@ I recommend you login with the credentials:
 Username: zamora
 Password: password
 
-This project is not complete, please see the [TODO](#todo) section for the list of features I intend to implement in the future.
-
 ## Running the code manually
 You will need two terminals to run this code unless you want to run them with background processes. I recommend two sessions so you can see the output of each server separately.
 
@@ -46,6 +47,8 @@ You will need two terminals to run this code unless you want to run them with ba
 Navigate to http://{ip address}:4200
 
 ### Back-end
+- dotnet clean
+- dotnet build
 - cd API
 - dotnet run
     - If you get CORS errors between client and server, but postman works, then it is likely that the trusted self-signed certificate expired. This is used for testing https communication.
@@ -55,32 +58,25 @@ All accounts use "password" as their password. I recommend you use "zamora" for 
 
 The TestDataTemplate in the server application is used with json-generator.com to generate seed data. It was used during early development, but doesn't work now due to numerous changes to the code. It is in my todo list below to update this. Until then, just use the sqlite database included in this repository.
 
-# TODO
-- Implement a default search image for crafts that do not have one.
-- Convert the craftSort option into an enum in wishlistscomponent and craftlistscomponent.
-- I still need to implement the client side for creating orders and modifying the status of the orders as the seller.
-    - I need to handle the use case where a seller updates crafts between the time a user adds items to their cart and the time they checkout.
+## Ideas for 2.0+:
 - Currently, the update craft page has a huge flaw - it is possible to delete images then "cancel" the update. 
     - This should be prevented as it will cause the images to fail to load and because they have been deleted already, trying to delete them again will fail.
     - I also need to do something when a user uploads new media, but then cancels the creation/updating of crafts. This will leak storage space on my CDN.
-- I need to cleanup the properties of my DTO's and entities to include the required keyword where necessary.
-- Add return types to typescript functions. It is nice to know.
-- Update the Login request to return the displayname of the current user. This way I can display the display name in the menu bar.
-- Add the ability to create new chat conversations with sellers of existing crafts.
-- Deploy my app using mariadb instead of sqlite.
-    - Obfuscate my javascript code during deployment so it is harder to reverse engineer in production.
-    - Figure out why running in docker containers causes 500 server errors from all request from the host's browser to the backend container on the same machine.
-- Update seed data json.
-    
-## Ideas for 2.0+:
+- I need to handle the use case where a seller updates crafts between the time a user adds items to their cart and the time they checkout.
+- I would like to use MVVM for the front-end. I don't know if this is wise and I am certain that google recommends against OOP in angular for greater efficiency. This is something I will have to research.
 - Add logging and reporting.
+- Convert the craftSort option into an enum in wishlistscomponent and craftlistscomponent.
 - Implement separate billing and shipping addresses.
 - Create a curated list of categories for crafts and allow users to assign categories to their crafts. This has the potential to be abused if a person puts all categories on their products so I would need to somehow prevent that.
 - Create the ability to leave craft reviews. This would be a good example of when using a nosql database would be helpful.
-- Use a Mapper to map entities to dtos in a way that is LINQ/SQL friendly. Using constructors like I do creates a "black box" that can't be translated to sql. See https://github.com/dotnet/efcore/issues/34562 for details. Automapper used to be the gold standard, but they went commercial and there are other free options.
 - Create a CDN abstraction layer so switching to a different CDN can be as painless as possible. 
 - Sqlite doesn't store UTC dates well. I might want to fix that manually. This probably insn't improtant for a portfolio piece. If I were to do this project again I wouldn't use sqlite at all. It was a recommendation from the angular/asp.net course I took that in hindsight was a bad idea. Migrating to another database engine may involve numerous refactors to my code and will definitely require a custom migration script. 
 - My client currently passes the raw password when registering for a new account. This is a security flaw. I should consider using a better solution.
+- Update seed data json. Now that the app has the ability to create all entities from the front-end, there isn't much need for seed-data.
+- Deploy my app using mariadb instead of sqlite. 
+    - I chose not to do this because I want people to be able to run my application quickly. If I used mariadb, then I would need to create a custom mariadb container with my database, or create a script that imports a database export on startup if the tables don't exist. Using sqlite I can just bundle my database with the code and you can run.
+    - Obfuscate my javascript code during deployment so it is harder to reverse engineer in production.
+    - Figure out why running in docker containers causes 500 server errors from all request from Firefox to the backend container on the same machine. Chrome/edge are fine.
 
 # Common Questions
 ## Why this app

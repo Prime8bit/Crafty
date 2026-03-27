@@ -2,7 +2,7 @@ import { CraftMedia } from "./media"
 
 export interface Craft {
     id: number;
-    sellerUserName: string;
+    sellerId: number;
     sellerDisplayName: string;
     name: string;
     price: number;

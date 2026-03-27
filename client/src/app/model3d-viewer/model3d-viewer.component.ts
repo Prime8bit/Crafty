@@ -18,9 +18,9 @@ export class Model3dViewerComponent implements AfterViewInit, OnDestroy{
 
     private toastr = inject(ToastrService);
     private scene = new THREE.Scene();
-    private camera: THREE.PerspectiveCamera | undefined;
-    private renderer: THREE.WebGLRenderer | undefined;
-    private controls: OrbitControls | undefined;
+    private camera?: THREE.PerspectiveCamera;
+    private renderer?: THREE.WebGLRenderer;
+    private controls?: OrbitControls;
     private frameId = 0;
     private resizeObserver?: ResizeObserver;
 
@@ -28,7 +28,7 @@ export class Model3dViewerComponent implements AfterViewInit, OnDestroy{
     // The angular refresh loop updates once EVERY 60ms which is a waste
     constructor(private ngZone: NgZone) {}
 
-    ngAfterViewInit() {
+    ngAfterViewInit(): void {
         this.initThreeJs();
         this.startResizeObservation();
 
@@ -45,7 +45,7 @@ export class Model3dViewerComponent implements AfterViewInit, OnDestroy{
         this.scene.clear();
     }
 
-    initThreeJs() {
+    initThreeJs(): void {
         const canvasElement = this.canvas?.nativeElement;
         if (!canvasElement)
         {
@@ -91,7 +91,7 @@ export class Model3dViewerComponent implements AfterViewInit, OnDestroy{
 
     // To provide animate as a function object to requestAnimationFrame, I can't just declare this as a function
     // I need to make it an arrow function object.
-    private animate = () => {
+    private animate = (): void => {
         if (!this.renderer || !this.controls || !this.camera) {
             return;
         }
@@ -102,7 +102,7 @@ export class Model3dViewerComponent implements AfterViewInit, OnDestroy{
         this.renderer.render(this.scene, this.camera);
     }
 
-    private startResizeObservation() {
+    private startResizeObservation(): void {
         const parent = this.canvas?.nativeElement?.parentElement;
         if (!parent)
         {
@@ -119,7 +119,7 @@ export class Model3dViewerComponent implements AfterViewInit, OnDestroy{
         this.resizeObserver.observe(parent);
     }
 
-    private onResize(width: number, height: number) {
+    private onResize(width: number, height: number): void {
         if (!this.renderer || !this.camera) {
             return;
         }

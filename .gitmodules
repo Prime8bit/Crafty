@@ -1,0 +1,3 @@
+[submodule "CraftyCommon"]
+	path = CraftyCommon
+	url = https://codeberg.org/Prime8bit/CraftyCommon.git

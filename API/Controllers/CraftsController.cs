@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using API.Data;
-using API.DTOs;
 using API.Entities;
 using API.Extensions;
 using API.Misc;
 using API.Pagination;
+using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,11 +39,6 @@ public class CraftsController(
     [HttpPost]
     public async Task<ActionResult<CraftDto>> NewCraft(CraftDto newCraft)
     {
-        if (string.IsNullOrEmpty(newCraft.SellerUserName))
-        {
-            return NotFound("You cannot create a craft without specifying the seller.");
-        }
-
         if (string.IsNullOrEmpty(newCraft.Name))
         {
             return NotFound("You cannot create a craft without a name.");
@@ -71,11 +66,6 @@ public class CraftsController(
         if (string.IsNullOrEmpty(userIdStr) || !long.TryParse(userIdStr, out userId))
         {
             return NotFound("You must be logged in to edit a craft.");
-        }        
-
-        if (string.IsNullOrEmpty(updatedCraft.SellerUserName))
-        {
-            return NotFound("You cannot update a craft without specifying the seller.");
         }
 
         if (string.IsNullOrEmpty(updatedCraft.Name))
@@ -83,7 +73,10 @@ public class CraftsController(
             return NotFound("You cannot update the craft without a name.");
         }
         
-        updatedCraft.Id = craftId;       
+        if (updatedCraft.Id != craftId)
+        {
+            return BadRequest("You cannot change the id of a craft");
+        }    
 
         return GetActionResult(await craftManager.UpdateCraftAsync(userId, updatedCraft));
     }

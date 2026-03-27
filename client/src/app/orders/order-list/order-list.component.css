@@ -1,0 +1,16 @@
+#sortDropdown {
+    width: 170px;
+}
+
+#orderTable {
+    cursor: pointer; 
+    max-width: 800px;
+}
+
+.orderTableWideCol {
+    width: 200px;
+}
+
+.orderTableThinCol {
+    width: 100px;
+}

@@ -3,6 +3,8 @@ using API.Data;
 using API.Data.Configuration;
 using API.Misc;
 using API.Services;
+using Mapster;
+using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Extensions;
@@ -13,6 +15,9 @@ public static class ApplicationServiceExtensions
         this IServiceCollection services, 
         IConfiguration config)
     {
+        var mapsterConfig = TypeAdapterConfig.GlobalSettings;
+        mapsterConfig.Scan(typeof(Program).Assembly);
+
         services.AddControllers();
         services.AddDbContext<DataContext>(opt => 
         {
@@ -28,7 +33,12 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IOrderManager, OrderManager>();
         services.AddScoped<IAccountManager, AccountManager>();
         services.AddScoped<IMessageManager, MessageManager>();
+        services.AddSingleton(mapsterConfig);
+#if DEBUG
+        services.AddSignalR(options => options.EnableDetailedErrors = true);
+#else
         services.AddSignalR();
+#endif
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         // FUTURE: Nate add OpenAPI documentation

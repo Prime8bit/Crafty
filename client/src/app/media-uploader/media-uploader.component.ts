@@ -30,7 +30,7 @@ export class MediaUploaderComponent {
     private cloudMediaService: MediaService = inject(MediaService);
     private toastr: ToastrService = inject(ToastrService);
     // I need to expose my enum to the html template.
-    public MediaType = MediaType;
+    MediaType = MediaType;
     
     parentCraft: InputSignal<Craft> = input.required<Craft>();    
     parentCraftChanged: OutputEmitterRef<Craft> = output<Craft>();
@@ -78,11 +78,11 @@ export class MediaUploaderComponent {
     }
 
     // File Uploader methods
-    fileOverBase(event:any):void {
+    fileOverBase(event:any): void {
         this.hasBaseDropZoneOver = event;
     }    
 
-    deleteTempMedia(file: FileItem) {
+    deleteTempMedia(file: FileItem): void {
         const index = this.tempMedias.findIndex(media => media.cloudId === file._file.name);
         if (index > -1) {
             this.tempMedias.splice(index, 1);
@@ -90,12 +90,12 @@ export class MediaUploaderComponent {
         file.remove();
     }
 
-    deleteAllTempMedias() {
+    deleteAllTempMedias(): void {
         this.tempMedias = [];
         this.uploader.clearQueue();
     }
 
-    deleteUploadedImage(cloudId: string) {
+    deleteUploadedImage(cloudId: string): void {
         const index = this.parentCraft().medias.findIndex(media => media.cloudId === cloudId);
         if (index > -1) {
             this.cloudMediaService.deleteCloudImage(cloudId).subscribe({
@@ -107,7 +107,7 @@ export class MediaUploaderComponent {
         }
     }
     
-    deleteUploadedVideo(cloudId: string) {
+    deleteUploadedVideo(cloudId: string): void {
         const index = this.parentCraft().medias.findIndex(media => media.cloudId === cloudId);
         if (index > -1) {
             this.cloudMediaService.deleteCloudVideo(cloudId).subscribe({
@@ -117,7 +117,7 @@ export class MediaUploaderComponent {
         }
     }
 
-    deleteUploadedModel3d(cloudId: string) {
+    deleteUploadedModel3d(cloudId: string): void {
         const index = this.parentCraft().medias.findIndex(media => media.cloudId === cloudId);
         if (index > -1) {
             this.cloudMediaService.deleteCloudModel3d(cloudId).subscribe({

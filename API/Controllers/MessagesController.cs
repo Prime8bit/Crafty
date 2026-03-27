@@ -1,8 +1,7 @@
 using System.Security.Claims;
 using API.Data;
-using API.DTOs;
-using API.Entities;
 using API.Pagination;
+using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,14 +35,7 @@ public class MessagesController(IMessageManager messageManager) : BaseApiControl
 
         return GetActionResult(await messageManager.GetMessageThread(userId, recipientId, paginationParams));
     }
-
-    /**
     
-    Task<ManagerResponse<MessageDto>> AddMessage(MessageDto messageDto);
-    void DeleteMessage(Message messages);
-    Task<Message?> GetMessage(long messageId);
-    Task<ManagerResponse<IEnumerable<MessageDto>>> GetMessageThread(long userId, long recipientId);
-    **/
     [HttpPost]
     public async Task<ActionResult<MessageDto>> CreateMessage(CreateMessageDto messageDto)
     {

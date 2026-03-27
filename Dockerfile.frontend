@@ -9,7 +9,7 @@ RUN npm install -g @angular/cli@^18
 
 # Copy repository and install
 RUN apk add --no-cache git \
-    && git clone https://github.com/Prime8bit/Crafty.git . 
+    && git clone http://dev.prime8bit.com/Prime8bit/Crafty.git . 
 
 # Expose Angular dev server port
 

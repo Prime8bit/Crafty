@@ -19,15 +19,15 @@ export class CraftService {
     craftCache = new Map<string, Craft>();
     craftListParams = signal<CraftListParams>(new CraftListParams());
 
-    resetCraftListParams() {
+    resetCraftListParams(): void {
         this.craftListParams.set(new CraftListParams());
     }
     
-    getCrafts() {
+    getCrafts(): void {
         const cacheKey = Object.values(this.craftListParams()).join('-');
         const response = this.craftListCache.get(cacheKey);
         if (response) {
-            return this.setPaginatedResponse(response);
+            this.setPaginatedResponse(response);
         }
         
         let params = new HttpParams();
@@ -43,7 +43,7 @@ export class CraftService {
         params = params.append("isOrderDescending", this.craftListParams().isOrderDescending);
         params = params.append("archiveFilter", this.craftListParams().archiveFilter);
 
-        return this.http.get<Craft[]>(`${this.baseUrl}crafts`, { observe: 'response', params}).subscribe({
+        this.http.get<Craft[]>(`${this.baseUrl}crafts`, { observe: 'response', params}).subscribe({
             next: response => {
                 this.setPaginatedResponse(response);
                 this.craftListCache.set(cacheKey, response);
@@ -51,7 +51,7 @@ export class CraftService {
         });
     }
 
-    getCraft(idStr: string){
+    getCraft(idStr: string): Observable<Craft> {
         const craft = this.craftCache.get(idStr);
 
         if (craft) return of(craft);
@@ -61,23 +61,23 @@ export class CraftService {
         );
     }
 
-    newCraft(model: Craft) {
+    newCraft(model: Craft): Observable<Craft> {
         return this.http.post<Craft>(`${this.baseUrl}crafts`, model);
     }
 
-    updateCraft(idStr: string, model: Craft) {
+    updateCraft(idStr: string, model: Craft): Observable<Craft> {
         return this.http.put<Craft>(`${this.baseUrl}crafts/${idStr}`, model);
     }
 
-    archiveCraft(id: number) {
+    archiveCraft(id: number): Observable<Craft> {
         return this.http.put<Craft>(`${this.baseUrl}crafts/${id}/archive`, {});
     }
 
-    markCraftAsInappropriate(id: number) {
+    markCraftAsInappropriate(id: number): Observable<Craft> {
         return this.http.put<Craft>(`${this.baseUrl}crafts/${id}/inappropriate`, {});
     }
 
-    markCraftAsAppropriate(id: number) {
+    markCraftAsAppropriate(id: number): Observable<Craft> {
         return this.http.put<Craft>(`${this.baseUrl}crafts/${id}/appropriate`, {});
     }
 
@@ -98,7 +98,7 @@ export class CraftService {
         );
     }
 
-    private setPaginatedResponse(response: HttpResponse<Craft[]> ) {
+    private setPaginatedResponse(response: HttpResponse<Craft[]> ): void {
         this.paginatedResult.set({
             items: response.body as Craft[], 
             pagination: JSON.parse(response.headers.get('Pagination')!)

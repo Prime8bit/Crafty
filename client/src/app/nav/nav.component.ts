@@ -7,6 +7,8 @@ import { ToastrService } from 'ngx-toastr';
 import { TitleCasePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { HasRoleDirective } from '../directives/has-role.directive';
+import { UserLoginRequest } from '../models/user-login';
+import { OrderService } from '../services/order.service';
 
 @Component({
     selector: 'app-nav',
@@ -25,17 +27,20 @@ import { HasRoleDirective } from '../directives/has-role.directive';
 export class NavComponent {
     private router = inject(Router);
     private toastr = inject(ToastrService);
-    accountService: AccountService = inject(AccountService);
-    model: any = {};
+    accountService = inject(AccountService);
+    orderService = inject(OrderService);
 
-    login() {
+    model: UserLoginRequest = { userName: '', password: ''};
+
+    login(): void {
         this.accountService.login(this.model).subscribe({
             next: _ => this.router.navigateByUrl('/craft'),
             error: (error: HttpErrorResponse) => this.toastr.error(error.message) 
         });
     }
 
-    logout() {
+    logout(): void {
+        this.orderService.deleteCart();
         this.accountService.logout();
         this.router.navigateByUrl('/');
     }

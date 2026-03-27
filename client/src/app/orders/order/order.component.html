@@ -1,0 +1,222 @@
+@if (order) {
+    <div class="container py-5">        
+    @if (isCart) { 
+        <h1>Cart</h1>
+    } @else {
+        <h1 >Order</h1>
+        <div class="d-flex flex-row gap-4">
+            <p><strong>Order ID</strong> #{{order.id}}</p>
+            <p class="mb-3"><strong>Order Date:</strong> {{order.orderDate | date}}</p>
+        </div>
+    }
+    <div class="row">
+        <div class="col-8">
+            @if (!isCart) { 
+                <div class="card d-flex">
+                    <div class="d-flex flex-row align-items-center gap-5 justify-content-between p-3">
+                        <div class="d-flex flex-row align-items-center gap-2">
+                            <strong>Buyer:</strong> 
+                            <img class="smallImage img-fluid rounded" src="{{order.buyerProfileImageUrl}}">
+                            <div class="d-flex flex-column">
+                                <a routerLink="/user/{{order.buyerId}}">{{order.buyerDisplayName}}</a>
+                                <a href="mailto:{{order.buyerEmail}}"><small>({{order.buyerEmail}})</small></a>
+                            </div>
+                        </div>          
+                        @if(isUserBuyer) {
+                            <div class="d-flex flex-row align-items-center gap-2">
+                                <strong>Status:</strong>
+                                <div class="btn-group" dropdown>
+                                    <button id="button-basic" dropdownToggle type="button" class="btn btn-primary dropdown-toggle"
+                                            aria-controls="dropdown-basic">
+                                        {{orderStatusStrings.get(this.selectedOrderStatus)}} <span class="caret"></span>
+                                    </button>
+                                    <ul id="dropdown-basic" *dropdownMenu class="dropdown-menu"
+                                        role="menu" aria-labelledby="button-basic">
+                                        @for (orderStatusOption of orderStatusOptions | keyvalue; track orderStatusOption) {
+                                            <li role="menuitem"><a class="dropdown-item" (click)="setSelectedOrderStatus(orderStatusOption.key)">{{orderStatusOption.value}}</a></li>
+                                        }
+                                    </ul>
+                                </div>
+                                <a class="btn btn-primary" (click)="setOrderStatus()">Update</a>
+                            </div>
+                        } @else {
+                            <span><strong>Status:</strong> {{orderStatusStrings.get(order.status)}}</span>
+                        }
+                    </div>
+                    <div class="d-flex flex-row gap-3 px-3 pb-3">
+                        <div class="d-flex flex-column gap-2">
+                            <strong>Shipping Name:</strong>
+                            <strong>Billing Name:</strong>
+                        </div>
+                        <div class="d-flex flex-column gap-2">
+                            <span>{{order.shippingName}}</span>
+                            <span>{{order.billingName}}</span>
+                        </div>
+                        <div class="d-flex flex-column gap-2">
+                            <strong>Shipping Address:</strong>
+                            <strong>Billing Address:</strong>
+                        </div>
+                        <div class="d-flex flex-column gap-2">
+                            <span>{{order.shippingAddress}}</span>
+                            <span>{{order.billingAddress}}</span>
+                        </div>
+                    </div>
+                </div>
+            }
+            <!-- Cart Items -->
+            <h3 class="m-2">Order Items</h3>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr class="bg-secondary">
+                                <th style="text-align: center; width:350px;">Craft</th>
+                                <th style="text-align: center; width:350px;">Seller</th>
+                                <th style="text-align: center; width:350px;">Status</th>
+                                <th style="text-align: center; width:150px;">Quantity</th>
+                                <th style="text-align: right; width:150px;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (orderItem of order.orderItems; track orderItem) {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex flex-row align-items-center gap-2 me-3">
+                                            <img src="{{orderItem.craftMediaUrl}}" alt="{{orderItem.craftName}}" class="smallImage img-fluid rounded">
+                                            <a routerLink="/craft/{{orderItem.craftId}}">{{orderItem.craftName}}</a>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-row align-items-center gap-2 me-3">
+                                            @if(orderItem.sellerProfileImageUrl) {
+                                                <img src="{{orderItem.sellerProfileImageUrl}}" alt="{{orderItem.sellerDisplayName}}" class="smallImage img-fluid rounded me-3">
+                                            }
+                                            <div class="d-flex flex-column">
+                                                <a routerLink="/user/{{orderItem.sellerId}}">{{orderItem.sellerDisplayName}}</a>
+                                                @if(!isCart) {
+                                                    <a href="mailto:{{orderItem.sellerEmail}}"><small>({{orderItem.sellerEmail}})</small></a>
+                                                }
+                                            </div>
+                                        </div>  
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column align-items-center">
+                                            @if(isUserBuyer) {
+                                                <p>{{orderItemStatusOptions.get(orderItem.status)}}</p>
+                                            } @else {
+                                                <div class="d-flex flex-row align-items-center gap-2">
+                                                    <div class="btn-group" dropdown>
+                                                        <button id="button-basic" dropdownToggle type="button" class="btn btn-primary dropdown-toggle"
+                                                                aria-controls="dropdown-basic">
+                                                            {{orderItemStatusOptions.get(selectedOrderItemStatusDict.get(orderItem.id) ?? 0)}} <span class="caret"></span>
+                                                        </button>
+                                                        <ul id="dropdown-basic" *dropdownMenu class="dropdown-menu"
+                                                            role="menu" aria-labelledby="button-basic">
+                                                            @for (orderItemStatusOption of orderItemStatusOptions | keyvalue; track orderItemStatusOption) {
+                                                                <li role="menuitem">
+                                                                    <a class="dropdown-item" (click)="setSelectedOrderItemStatus(orderItem.id, orderItemStatusOption.key)">
+                                                                        {{orderItemStatusOption.value}}</a>
+                                                                </li>
+                                                            }
+                                                        </ul>
+                                                    </div>
+                                                    <a class="btn btn-primary" (click)="setOrderItemStatus(orderItem.id)">Update</a>
+                                                </div>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-row align-items-center">
+                                            @if (isCart) {
+                                            <div class="input-group">
+                                                <button 
+                                                    class="btn btn-outline-secondary btn-sm" 
+                                                    type="button"
+                                                    (click)="setCartItemQuantity(orderItem.craftId, orderItem.quantity - 1)"
+                                                    >-</button>
+                                                <input 
+
+                                                    style="max-width:100px" 
+                                                    type="text" 
+                                                    class="form-control form-control-sm text-center quantity-input" 
+                                                    value="{{orderItem.quantity}}"
+                                                    (keyup.enter)="onOrderItemQuantityChanged($event, orderItem)"
+                                                    >
+                                                <button 
+                                                    class="btn btn-outline-secondary btn-sm" 
+                                                    type="button"
+                                                    (click)="setCartItemQuantity(orderItem.craftId, orderItem.quantity + 1)"
+                                                    >+</button>
+                                            </div>
+                                            } @else {
+                                                <p>{{orderItem.quantity}}</p>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <p class="fw-bold w-100 text-end">{{orderItem.pricePerCraft * orderItem.quantity * orderItem.discount | currency: 'USD'}}</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @if (isCart) {
+                <div class="d-flex flex-row justify-content-between">
+                    <a class="btn btn-primary" routerLink="/craft">
+                        <i class="fa fa-arrow-left me-2"></i>Return to shopping
+                    </a>
+                    <a class="btn btn-primary" routerLink="/checkout">
+                        Checkout<i class="fa fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            } @else {
+                <div class="d-flex flex-row justify-content-between">
+                    <a class="btn btn-primary" routerLink="/user/update" [queryParams]="{tab: 'Orders'}">
+                        <i class="fa fa-arrow-left me-2"></i>Order List
+                    </a>
+                </div>
+            }
+        </div>
+        <div class="col-4">
+            <!-- Cart Summary -->
+            <div class="card cart-summary">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Order Summary</h5>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Subtotal</span>
+                        <span>{{order.totalPrice | currency: 'USD'}}</span>
+                    </div>
+                    <!-- For this portfolio piece, I am not calculating shipping or tax. I am just hardcoding fake values. -->
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Shipping</span>
+                        <span>$10.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Tax</span>
+                        <span>{{order.totalPrice * 0.07 | currency: 'USD'}}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <strong>Total</strong>
+                        <strong>{{1.07 * order.totalPrice + 10.0 | currency: 'USD'}}</strong>
+                    </div>
+                    <!-- <button class="btn btn-primary w-100">Proceed to Checkout</button> -->
+                </div>
+            </div>
+            <!-- Promo Code 
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Apply Promo Code</h5>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Enter promo code">
+                        <button class="btn btn-outline-secondary" type="button">Apply</button>
+                    </div>
+                </div>
+            </div>
+            -->
+        </div>
+    </div>
+</div>
+}

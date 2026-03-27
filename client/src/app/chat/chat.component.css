@@ -5,3 +5,9 @@
 #userList li p {
     pointer-events: none;
 }
+
+#scrollContainer {
+    overflow: scroll; 
+    max-height: 550px; 
+    scroll-behavior: smooth;
+}

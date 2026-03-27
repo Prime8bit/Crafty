@@ -95,18 +95,17 @@
             </div>
         </div>
     </div>
-    <hr style="margin-top: 20px;"/>
+    <hr class="mt-3" />
     
     <h3>Preview Items:</h3>
-    <div class="flex-container mt-2" style="display: flex; flex-wrap: wrap;">
+    <div class="d-flex flex-container flex-wrap mt-2">
         <!-- the track parameter should be something unique that doesn't change, like cloudId. This helps angular be effcient when updating list items-->
         @for(media of tempMedias; track media.cloudId) {
-            <div class="image-container border m-2 p-2 flex-column" style="width: 190px; height: 190px;">
-                <div class="flex-grow-1 d-flex align-items-center justify-content-center h-100 w-100">
+            <div class="tempMediaContainer image-container border m-2 p-2 d-flex flex-column">
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
                     @if (media.type === MediaType.Video) {
                         <video 
-                        class="mediaItem videoItem" 
-                        style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                        class="media mb-1" 
                         part="video" 
                         playsinline="" 
                         muted="" 
@@ -121,8 +120,7 @@
                     } @else {
                         <img 
                         src="{{media.url}}" 
-                        class="mb-1"
-                        style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                        class="media mb-1"
                         alt="Image {{media.id}}">
                     }
                 </div>
@@ -130,15 +128,14 @@
         }      
     </div>
     <h3>Uploaded Items:</h3>
-    <div class="flex-container mt-2" style="display: flex; flex-wrap: wrap;">
+    <div class="d-flex flex-container flex-wrap mt-2">
         <!-- the track parameter should be something unique that doesn't change, like cloudId. This helps angular be effcient when updating list items-->
         @for(media of parentCraft().medias; track media.cloudId) {
-            <div class="image-container border m-2 p-2 d-flex flex-column" style="width: 190px; height: 220px;">
+            <div class="uploadedMediaContainer image-container border m-2 p-2 d-flex flex-column">
                 @if (media.type === MediaType.Video) {
-                    <div class="flex-grow-1 d-flex align-items-center justify-content-center h-100 w-100">
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-center mb-1">
                         <video 
-                        class="media videoItem" 
-                        style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                        class="media mb-1" 
                         part="video" 
                         playsinline="" 
                         muted="" 
@@ -149,43 +146,43 @@
                             Video {{media.id}}
                         </video>
                     </div>
-                    <div class="d-flex justify-content-center gap-1 mt-1">
+                    <div class="d-flex justify-content-center gap-1">
                         <!-- the type must be button to prevent submitting any forms this component may be inside. -->
                         <button 
                             type="button" 
-                            class="btn btn-sm btn-danger" 
+                            class="btn btn-sm btn-danger mb-2" 
                             (click)="deleteUploadedVideo(media.cloudId)"><i class="fa fa-trash"></i></button>
                     </div>
                 } @else if (media.type == MediaType.Model3d) {
-                    <div class="flex-grow-1 d-flex align-items-center justify-content-center h-100 w-100">
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-center mb-1">
                         <app-model3d-viewer [modelUrl]=media.url></app-model3d-viewer>
                     </div>
-                    <div class="d-flex justify-content-center gap-1 mt-1">
+                    <div class="d-flex justify-content-center gap-1">
                         <!-- the type must be button to prevent submitting any forms this component may be inside. -->
                         <button 
                             type="button"
-                            class="btn btn-sm btn-danger" 
+                            class="btn btn-sm btn-danger mb-2" 
                             (click)="deleteUploadedModel3d(media.cloudId)"><i class="fa fa-trash"></i></button>
                     </div>
                 } @else {
-                    <div class="flex-grow-1 d-flex align-items-center justify-content-center h-100 w-100">
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-center mb-1">
                         <img 
+                        class="media mb-1"
                         src="{{media.url}}" 
-                        style="max-width: 100%; max-height: 100%; object-fit: contain;"
                         alt="Image {{media.id}}">
                     </div>
-                    <div class="d-flex justify-content-center gap-1 mt-1">
+                    <div class="d-flex justify-content-center gap-1">
                         <!-- the type must be button to prevent submitting any forms this component may be inside. -->
                         <button
                             type="button"
-                            class="btn btn-sm me-1"
+                            class="btn btn-sm me-1 mb-1"
                             [disabled]="media.id === parentCraft().searchImageId"
                             (click)="setSearchImage(media.cloudId)"
                             [ngClass]="media.id === parentCraft().searchImageId ? 'btn-success active': 'btn-outline-success'"
                             >Main</button>
                         <button 
                             type="button"
-                            class="btn btn-sm btn-danger" 
+                            class="btn btn-sm btn-danger mb-1" 
                             (click)="deleteUploadedImage(media.cloudId)"
                             ><i class="fa fa-trash"></i></button>
                     </div>

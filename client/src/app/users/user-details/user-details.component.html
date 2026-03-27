@@ -13,10 +13,11 @@
                         </div>
                     </div>
                     <div class="card-footer d-flex justify-content-center">
-                        <button class="btn btn-primary d-flex align-items-center" >
-                            <i class="fa fa-envelope me-2"></i>
-                            <p class="mb-0">Message Seller</p>
-                        </button>
+                        <a 
+                            [routerLink] = "['/chat']" 
+                            [queryParams] = "{ selectedUser: user.id }"
+                            class="btn btn-primary"
+                            >Message Crafter</a>
                     </div>
                 </div>
             </div>

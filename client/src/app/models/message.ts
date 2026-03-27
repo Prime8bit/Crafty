@@ -3,6 +3,8 @@ export interface Message {
     content: string;
     dateRead: string;
     dateSent: string;
+    senderDeleted: boolean;
+    recipientDeleted: boolean;
     senderId: number;
     senderDisplayName: string;
     senderProfileImageUrl: string;

@@ -49,7 +49,7 @@ export class CraftUpdateComponent implements OnInit {
         stock: 0,
         createdAt: '',
         sellerDisplayName: '',
-        sellerUserName: '',
+        sellerId: 0,
         searchImageId: null,
         searchImage: null,
         medias: [],
@@ -64,7 +64,7 @@ export class CraftUpdateComponent implements OnInit {
         this.loadCraft();
     }    
 
-    updateCraft() {
+    updateCraft(): void {
         if (this.user === undefined) {
             return;
         }
@@ -75,7 +75,7 @@ export class CraftUpdateComponent implements OnInit {
         }
 
         this.craft.sellerDisplayName = this.user.displayName;
-        this.craft.sellerUserName = this.user.userName;
+        this.craft.sellerId = this.user.id;
         
         if (this.craftId !== null) {
             this.craftService.updateCraft(this.craft.id.toString(), this.craft).subscribe({
@@ -104,22 +104,22 @@ export class CraftUpdateComponent implements OnInit {
         }
     }
 
-    onParentCraftChanged(event: Craft) {   
+    onParentCraftChanged(event: Craft): void {   
         this.craft = event;
     }
     
-    private loadUser() {
+    private loadUser(): void {
         const user = this.accountService.currentUser();
         if (!user) {
             return;
         }
 
-        this.userService.getUser(user.userName).subscribe({
+        this.userService.getUser(user.userId).subscribe({
             next: user => this.user = user
         });
     }
 
-    private loadCraft() {
+    private loadCraft(): void {
         this.craftId = this.route.snapshot.paramMap.get('craftId');
 
         if (this.craftId === null) {
@@ -131,7 +131,7 @@ export class CraftUpdateComponent implements OnInit {
                 stock: 0,
                 createdAt: '',
                 sellerDisplayName: '',
-                sellerUserName: '',
+                sellerId: 0,
                 searchImageId: null,
                 searchImage: null,
                 medias: [],

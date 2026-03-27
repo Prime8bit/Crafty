@@ -4,23 +4,29 @@
         <div class="card">
             <div class="d-flex flex-column justify-content-center align-items-center">
                 <carousel id="craftMediaCarousel" [interval]="0">
+                    @if (craft.medias.length == 0)
+                    {                        
+                        <slide>
+                            <img class="card-img mediaItem d-block" src="assets/DefaultCraft.jpg" alt="{{craft.name}} image">
+                        </slide> 
+                    }
                     @for (craftMedia of craft.medias; track craftMedia.id; let mediaIndex = $index) {
                         @if(craftMedia.type === MediaType.Video) {
                             <slide>
-                                <video class="mediaItem videoItem h-500" part="video" playsinline="" muted="" src="{{craftMedia.url}}" preload="auto" controls>
+                                <video class="mediaItem videoItem" part="video" playsinline="" muted="" src="{{craftMedia.url}}" preload="auto" controls>
                                     <track kind="metadata" label="cuepoints" data-removeondestroy="">
                                     {{craft.name}} video {{mediaIndex}}
                                 </video>
                             </slide>       
                         } @else if (craftMedia.type === MediaType.Model3d) {
                             <slide>
-                                <div style="height:500px; width:500px;">
+                                <div class="mediaItem">
                                     <app-model3d-viewer [modelUrl]=craftMedia.url></app-model3d-viewer>
                                 </div>
                             </slide>      
                         } @else {
                             <slide>
-                                <img class="card-img mediaItem d-block h-500" src="{{craftMedia.url || './assets/user.png'}}" alt="{{craft.name}} image {{mediaIndex}}">
+                                <img class="card-img mediaItem d-block" src="{{craftMedia.url || './assets/user.png'}}" alt="{{craft.name}} image {{mediaIndex}}">
                             </slide>  
                         }
                     }
@@ -38,8 +44,17 @@
                 <div class="row">
                     <p><strong>Created: </strong>{{craft.createdAt || "Unknown"}}</p>
                 </div>
-                <div>
-                    <p><strong>Crafter: </strong><a routerLink="/user/{{craft.sellerUserName}}">{{craft.sellerDisplayName}}</a></p>
+                <div class="row">
+                    <div class="col text-nowrap">
+                        <p><strong>Crafter: </strong><a routerLink="/user/{{craft.sellerId}}">{{craft.sellerDisplayName}}</a></p>
+                    </div>
+                    <div class="col">
+                        <a 
+                            [routerLink] = "['/chat']" 
+                            [queryParams] = "{ selectedUser: craft.sellerId }"
+                            class="btn btn-primary"
+                            >Message Crafter</a>
+                    </div>
                 </div>
                 @if (craft.stock === 0) {
                     <div>
@@ -48,7 +63,10 @@
                 }
                 <div *appHasRole="['User']" class="card-footer">
                     <div class="btn-group d-flex">
-                        <button class="btn btn-primary d-flex align-items-center">
+                        <button 
+                            class="btn btn-primary d-flex align-items-center"
+                            (click)="orderService.addToCart(craft)"
+                            >
                             <i class="fa fa-cart-plus me-2"></i>
                             <p class="mb-0">Add to cart</p>
                         </button>

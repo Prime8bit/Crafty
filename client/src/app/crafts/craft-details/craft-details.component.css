@@ -1,8 +1,6 @@
 .mediaItem {
     margin: 25px;
-    max-width: 500px;
-    max-height: 500px;
-    height: auto;
+    height: 500px;
     width: 500px;
 }
 
@@ -15,18 +13,17 @@
     border-top: none;
 }
 
-#mediaCarousel {
+#craftMediaCarousel {
     height: 100%;
-    width: 100%;
+    width: 550px;
 }
 
 .videoItem {
-    padding: 0px 50px;
     background-color: grey;
 }
 
 /** Bootstrap carousel arrows can't be seen on top of white images 
-    because I bootstrap classes aren't being controlled by angular, I need to put ::ng-deep
+    because bootstrap classes aren't being controlled by angular, I need to put ::ng-deep
     to prevent angular from appending angular id's to the css for the arrows
 **/
 #craftMediaCarousel ::ng-deep .carousel-control-prev-icon,

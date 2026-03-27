@@ -1,9 +1,9 @@
 using System.Security.Claims;
 using API.Data;
-using API.DTOs;
 using API.Extensions;
 using API.Misc;
 using API.Pagination;
+using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -11,7 +11,7 @@ namespace API.Controllers;
 public class OrdersController (IOrderManager orderManager) : BaseApiController
 {    
     [HttpGet]
-    public async Task<ActionResult<PagedList<OrderDto>>> GetOrders([FromQuery]OrderListParams listParams)
+    public async Task<ActionResult<PagedList<OrderListItemDto>>> GetOrders([FromQuery]OrderListParams listParams)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         long userId = 0;
@@ -30,7 +30,7 @@ public class OrdersController (IOrderManager orderManager) : BaseApiController
         return GetActionResult(orderResponse);
     }
     
-    [HttpGet("{orderId}")]
+    [HttpGet("{orderId:long}")]
     public async Task<ActionResult<OrderDto>> GetOrder(long orderId)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -66,18 +66,29 @@ public class OrdersController (IOrderManager orderManager) : BaseApiController
         return CreatedAtAction(nameof(GetOrder), new { orderId = response.Data!.Id }, orderDto);
     }
 
-    [HttpPut("{orderId}")]
-    public async Task<ActionResult<OrderDto>> UpdateOrder(long orderId, OrderDto orderDto)
+    [HttpPut("{orderId}/setStatus/{newStatus}")]
+    public async Task<ActionResult<OrderDto>> SetOrderStatus(long orderId, OrderStatus newStatus)
     {
-        orderDto.Id = orderId;
-
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         long userId = 0;
         if (string.IsNullOrEmpty(userIdStr) || !long.TryParse(userIdStr, out userId))
         {
-            return NotFound("You must be logged in to view your orders.");
+            return NotFound("You must be logged in to cancel your orders.");
         }
 
-        return GetActionResult(await orderManager.UpdateOrderAsync(userId, orderDto));
+        return GetActionResult(await orderManager.SetOrderStatusAsync(userId, orderId, newStatus));
+    }
+
+    [HttpPut("withOrderItem/{orderItemId}/setStatus/{newStatus}")]
+    public async Task<ActionResult<OrderItemDto>> UpdateOrderItemStatusAsync(long orderItemId, OrderItemStatus newStatus)
+    {        
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        long userId = 0;
+        if (string.IsNullOrEmpty(userIdStr) || !long.TryParse(userIdStr, out userId))
+        {
+            return NotFound("You must be logged in to update order items.");
+        }
+
+        return GetActionResult(await orderManager.UpdateOrderItemStatusAsync(userId, orderItemId, newStatus));
     }
 }

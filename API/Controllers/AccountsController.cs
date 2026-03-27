@@ -1,5 +1,5 @@
 using API.Data;
-using API.DTOs;
+using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -8,7 +8,7 @@ public class AccountsController(IAccountManager accountRepo) : BaseApiController
 {
 
     [HttpPost("register")]
-    public async Task<ActionResult<UserLoginDto>> Register(RegisterDto regDto)
+    public async Task<ActionResult<UserTokenDto>> Register(RegisterDto regDto)
     {
         var regDtoErrors = new List<string>();
         if (string.IsNullOrEmpty(regDto.UserName)) regDtoErrors.Add("Username is missing.");
@@ -20,7 +20,7 @@ public class AccountsController(IAccountManager accountRepo) : BaseApiController
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<UserLoginDto>> Login(UserLoginDto loginDto)
+    public async Task<ActionResult<UserTokenDto>> Login(UserLoginRequestDto loginDto)
     {        
         var regDtoErrors = new List<string>();
         if (string.IsNullOrEmpty(loginDto.UserName)) regDtoErrors.Add("Username is missing.");

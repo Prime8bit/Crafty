@@ -8,12 +8,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
 {
     public void Configure(EntityTypeBuilder<Order> builder)
     {
-        builder.HasKey(craft => craft.Id);
-
-        builder.HasOne(order => order.Seller)
-            .WithMany(user => user.OrdersAsSeller)
-            .HasForeignKey(order => order.SellerId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasKey(order => order.Id);
 
         // Don't forget to use .HasForeignKey with the explicit type when .WithOne() has no back reference.
         builder.HasOne(order => order.Buyer)

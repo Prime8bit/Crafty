@@ -1,5 +1,4 @@
 import { CanDeactivateFn } from '@angular/router';
-import { UserUpdateComponent } from '../users/user-update/user-update.component';
 import { CraftUpdateComponent } from '../crafts/craft-update/craft-update.component';
 
 export const PreventUnsavedChangesGuard: CanDeactivateFn<CraftUpdateComponent> = (component) => {

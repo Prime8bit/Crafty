@@ -16,8 +16,8 @@ export class ProfileImageUploaderComponent implements OnInit{
     private userService = inject(UserService);  
     private toastr = inject(ToastrService);
     
-    currentImageUrl: string | undefined;
-    selectedFile: File | undefined;
+    currentImageUrl?: string;
+    selectedFile?: File;
     
     user?: User;
 
@@ -25,13 +25,13 @@ export class ProfileImageUploaderComponent implements OnInit{
         this.loadUser();
     }
 
-    loadUser() {
+    loadUser(): void {
         const user = this.accountService.currentUser();
         if (!user) {
             return;
         }
 
-        this.userService.getUser(user.userName).subscribe({
+        this.userService.getUser(user.userId).subscribe({
             next: (user) => {
                 this.user = user;
                 this.currentImageUrl = this.user?.profileImage?.url;
@@ -39,7 +39,7 @@ export class ProfileImageUploaderComponent implements OnInit{
         });
     }
 
-    onFileSelected(event: Event) {
+    onFileSelected(event: Event): void {
         const input = event.target as HTMLInputElement;
         if (!input.files || input.files.length === 0) return;
 
@@ -48,7 +48,7 @@ export class ProfileImageUploaderComponent implements OnInit{
         this.currentImageUrl = URL.createObjectURL(this.selectedFile);
     }
 
-    save() {
+    save(): void {
         if (!(this.selectedFile && this.user)) return;
 
         const imageFormData = new FormData();
@@ -65,7 +65,7 @@ export class ProfileImageUploaderComponent implements OnInit{
         });
     }
 
-    cancel() {
+    cancel(): void {
         if (this.currentImageUrl && this.currentImageUrl != this.user?.profileImage?.url) {
             URL.revokeObjectURL(this.currentImageUrl);
         }

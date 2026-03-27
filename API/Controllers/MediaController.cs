@@ -1,7 +1,6 @@
-using API.DTOs;
-using API.Entities;
 using API.Services;
 using CloudinaryDotNet.Actions;
+using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

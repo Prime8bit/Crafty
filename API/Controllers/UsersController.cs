@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using API.Data;
-using API.DTOs;
+using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,14 +17,14 @@ public class UsersController(ICraftyUserManager userManager) : BaseApiController
     }
 
     [AllowAnonymous]
-    [HttpGet("{userName}")]
-    public async Task<ActionResult<UserDto>> GetUser(string userName)
+    [HttpGet("{userId}")]
+    public async Task<ActionResult<UserDto>> GetUser(long userId)
     {
-        var userDto = await userManager.GetUserAsync(userName);
+        var userDto = await userManager.GetUserAsync(userId);
 
         if (userDto == null)
         {
-            return NotFound($"User with UserName {userName} not found.");
+            return NotFound($"User with id {userId} not found.");
         }
 
         return Ok(userDto);

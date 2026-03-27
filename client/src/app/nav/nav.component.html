@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-primary">
     <div class="container-fluid">
-        <a class="navbar-brand" routerLink="/"><img src="assets/Logo.png" style="max-width:80px"/></a>
+        <a class="navbar-brand" routerLink="/"><img id="navLogo" src="assets/Logo.png"/></a>
         <ul class="navbar-nav me-auto mb-2 mb-md-0">  
             <li class="nav-item">
                 <a class="nav-link" routerLinkActive="active" routerLink="/craft">Crafts</a>
@@ -23,10 +23,12 @@
         @if(accountService.currentUser()) {
             <div dropdown class="dropdown">
                 <a dropdownToggle class="dropdown-toggle text-light text-decoration-none">
-                    Welcome {{accountService.currentUser()?.userName | titlecase}}
+                    Welcome {{accountService.currentUser()?.userDisplayName | titlecase}}
                 </a>
                 <div *dropdownMenu class="dropdown-menu">
-                    <a routerLink="/user/update" class="dropdown-item">Update Profile</a>
+                    <a class="dropdown-item" routerLink="/user/update">Update Profile</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" routerLink="/cart">Cart ({{orderService.cartCount()}})</a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" routerLink="/user/update" [queryParams]="{tab: 'Wishlist'}">Wishlist</a>
                     <div class="dropdown-divider"></div>

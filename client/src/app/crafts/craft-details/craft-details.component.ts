@@ -2,13 +2,14 @@ import { Component, computed, inject, OnInit } from '@angular/core';
 import { CraftService } from '../../services/craft.service';
 import { Craft } from '../../models/craft';
 import { MediaType } from '../../models/media';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { CarouselModule } from 'ngx-bootstrap/carousel';
 import { WishlistService } from '../../services/wishlist.service';
 import { ToastrService } from 'ngx-toastr';
 import { HasRoleDirective } from '../../directives/has-role.directive';
 import { Model3dViewerComponent } from '../../model3d-viewer/model3d-viewer.component';
+import { OrderService } from '../../services/order.service';
 
 @Component({
     selector: 'app-craft-details',
@@ -28,6 +29,8 @@ export class CraftDetailsComponent implements OnInit {
     private route = inject(ActivatedRoute);
     private wishlistService = inject(WishlistService);
     private toastr = inject(ToastrService);
+    orderService = inject(OrderService);
+    
     // Expose the enum to the template
     MediaType = MediaType;
     craft?: Craft;
@@ -36,7 +39,7 @@ export class CraftDetailsComponent implements OnInit {
         this.loadCraft();
     }
 
-    loadCraft() {
+    loadCraft(): void {
         const craftIdStr = this.route.snapshot.paramMap.get('craftId');
         if (!craftIdStr) {
             return;
@@ -47,7 +50,7 @@ export class CraftDetailsComponent implements OnInit {
         });
     }
 
-    toggleWishlist() {
+    toggleWishlist(): void {
         if (!this.craft)
             return;
 
@@ -69,7 +72,7 @@ export class CraftDetailsComponent implements OnInit {
         })
     }
 
-    markAsInappropriate() {
+    markAsInappropriate(): void {
         if (!this.craft)
             return;
 
@@ -79,7 +82,7 @@ export class CraftDetailsComponent implements OnInit {
         });
     }
 
-    markAsAppropriate() {
+    markAsAppropriate(): void {
         if (!this.craft)
             return;
 
@@ -89,7 +92,7 @@ export class CraftDetailsComponent implements OnInit {
         });
     }
 
-    archiveCraft() {
+    archiveCraft(): void {
         if (!this.craft)
             return;
 

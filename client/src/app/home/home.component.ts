@@ -13,11 +13,11 @@ import { HttpClient } from '@angular/common/http';
 export class HomeComponent {
     registerMode = false;
 
-    registerToggle() {
+    registerToggle(): void {
         this.registerMode = !this.registerMode;
     }
 
-    cancelRegisterMode(event: boolean) {
+    cancelRegisterMode(event: boolean): void {
         this.registerMode = event;
     }
 }

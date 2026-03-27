@@ -1,19 +1,21 @@
 using API.Data.Configuration;
-using API.DTOs;
 using API.Entities;
 using API.Misc;
 using API.Pagination;
+using CraftyCommon.DTOs;
+using Mapster;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data;
 
-public class MessageManager(DataContext context, ICraftyUserManager userManager) : IMessageManager
+public class MessageManager(DataContext context, UserManager<User> userManager) : IMessageManager
 {
     public async Task<ManagerResponse<MessageDto>> GetMessage(long userId, long messageId)
     {
 
         var result = await context.Messages
-            .Include(message => message.Sender)
+            .Include(message => message.Sender!)
                 .ThenInclude(user => user.ProfileImage)
             .Include(message => message.Recipient)
             .SingleOrDefaultAsync(message => message.Id == messageId);
@@ -35,12 +37,12 @@ public class MessageManager(DataContext context, ICraftyUserManager userManager)
             };
         }
             
-        return new ManagerResponse<MessageDto>(new MessageDto(result));
+        return new ManagerResponse<MessageDto>(result.Adapt<MessageDto>());
     }
 
     public async Task<ManagerResponse<PagedList<MessageDto>>> GetMessageThread(long senderId, long recipientId, PaginationParams paginationParams)
     {        
-        var sender = await userManager.GetUserAsync(senderId);
+        var sender = await userManager.FindByIdAsync(senderId.ToString());
         
         if (sender == null)
         {
@@ -51,7 +53,7 @@ public class MessageManager(DataContext context, ICraftyUserManager userManager)
             };
         }
 
-        var recipient = await userManager.GetUserAsync(recipientId);
+        var recipient = await userManager.FindByIdAsync(recipientId.ToString());
         
         if (recipient == null)
         {
@@ -70,13 +72,13 @@ public class MessageManager(DataContext context, ICraftyUserManager userManager)
             .ExecuteUpdateAsync(setters => setters.SetProperty(message => message.DateRead, DateTime.UtcNow));
 
         var query = context.Messages
-            .Include(message => message.Sender)
+            .Include(message => message.Sender!)
                 .ThenInclude(user => user.ProfileImage)
             .Include(message => message.Recipient)
-            .Where(message => (message.RecipientId == sender.Id && message.SenderId == recipient.Id && !message.RecipientDeleted)
-                || (message.SenderId == sender.Id && message.RecipientId == recipient.Id && !message.SenderDeleted))
+            .Where(message => (message.RecipientId == sender.Id && message.SenderId == recipient.Id)
+                || (message.SenderId == sender.Id && message.RecipientId == recipient.Id))
             .OrderByDescending(message => message.DateSent)
-            .Select(message => new MessageDto(message));
+            .ProjectToType<MessageDto>();
 
         var result = await PagedList<MessageDto>.CreateAsync(query, paginationParams.PageNumber, paginationParams.PageSize);
 
@@ -85,8 +87,8 @@ public class MessageManager(DataContext context, ICraftyUserManager userManager)
 
     public async Task<ManagerResponse<MessageDto>> AddMessage(long userId, CreateMessageDto messageDto)
     {        
-        var sender = await userManager.GetUserAsync(userId);
-        var recipient = await userManager.GetUserAsync(messageDto.RecipientId);
+        var sender = await userManager.FindByIdAsync(userId.ToString());
+        var recipient = await userManager.FindByIdAsync(messageDto.RecipientId.ToString());
 
         if (sender == null)
         {
@@ -126,8 +128,11 @@ public class MessageManager(DataContext context, ICraftyUserManager userManager)
         var message = new Message
         {
             SenderId = sender.Id,
+            Sender = sender,
             RecipientId = recipient.Id,
+            Recipient = recipient,
             Content = messageDto.Content,
+            DateSent = DateTime.Now,
             DateRead = messageDto.IsRead ? DateTime.UtcNow : null
         };
 
@@ -142,138 +147,197 @@ public class MessageManager(DataContext context, ICraftyUserManager userManager)
             };
         }
 
-        return new ManagerResponse<MessageDto>(new MessageDto(message) { 
-            SenderDisplayName = sender.DisplayName ?? "", 
-            SenderProfileImageUrl = sender.ProfileImage?.Url,
-            RecipientDisplayName = recipient.DisplayName ?? "" 
-            });
+        return new ManagerResponse<MessageDto>(message.Adapt<MessageDto>());
     }    
 
     public async Task<ManagerResponse> DeleteMessage(long userId, long messageId)
     {
-        var message = await context.Messages.FindAsync(messageId);
-        if (message == null)
+        using (var transaction = await context.Database.BeginTransactionAsync())
         {
-            return new ManagerResponse<MessageDto>()
+            try
             {
-                ResponseType = ManagerResponseType.NotFound,
-                ErrorMessages = [$"Message with id {messageId} was not found."]
-            };            
-        }
+                var message = await context.Messages.FindAsync(messageId);
+                if (message == null)
+                {
+                    return new ManagerResponse<MessageDto>()
+                    {
+                        ResponseType = ManagerResponseType.NotFound,
+                        ErrorMessages = [$"Message with id {messageId} was not found."]
+                    };            
+                }
 
-        if (message.SenderId != userId && message.RecipientId != userId)
-        {
-            
-            return new ManagerResponse<MessageDto>()
-            {
-                ResponseType = ManagerResponseType.BadRequest,
-                ErrorMessages = ["Only the sender or receiver of a message may delete it."]
-            };
-        }        
+                if (message.SenderId != userId && message.RecipientId != userId)
+                {
+                    
+                    return new ManagerResponse<MessageDto>()
+                    {
+                        ResponseType = ManagerResponseType.BadRequest,
+                        ErrorMessages = ["Only the sender or receiver of a message may delete it."]
+                    };
+                }        
 
-        if (message.SenderId == userId)
-        {
-            message.SenderDeleted = true;
-        }
+                if (message.SenderId == userId)
+                {
+                    message.SenderDeleted = true;
+                }
 
-        if (message.RecipientId == userId)
-        {
-            message.RecipientDeleted = true;
-        }
-        
-        if (message.SenderDeleted && message.RecipientDeleted)
-        {
-            context.Messages.Remove(message);            
-        }
+                if (message.RecipientId == userId)
+                {
+                    message.RecipientDeleted = true;
+                }
+                
+                if (message.SenderDeleted && message.RecipientDeleted)
+                {
+                    context.Messages.Remove(message);            
+                }
 
-        if (await context.SaveChangesAsync() == 0)
-        {
-            return new ManagerResponse<MessageDto>()
-            {
-                ResponseType = ManagerResponseType.BadRequest,
-                ErrorMessages = ["Failed to create new message."]
-            };
-        }
+                if (await context.SaveChangesAsync() == 0)
+                {
+                    return new ManagerResponse<MessageDto>()
+                    {
+                        ResponseType = ManagerResponseType.BadRequest,
+                        ErrorMessages = ["Failed to delete message."]
+                    };
+                }
 
-        return new ManagerResponse() { ResponseType = ManagerResponseType.Ok };
+                await transaction.CommitAsync();
+
+                return new ManagerResponse() { ResponseType = ManagerResponseType.Ok };
+                
+            } catch (Exception ex)
+            {                
+                return new ManagerResponse<MessageDto>()
+                {
+                    ResponseType = ManagerResponseType.BadRequest,
+                    ErrorMessages = [ex.Message]
+                }; 
+            }
+        }
     }
     
     public async Task<IEnumerable<ContactDto>> GetContactsAsync(long userId)
     {
         return await context.Messages                    
-            .Include(message => message.Sender)
+            .Include(message => message.Sender!)
                 .ThenInclude(user => user.ProfileImage)
-            .Include(message => message.Recipient)
+            .Include(message => message.Recipient!)
                 .ThenInclude(user => user.ProfileImage)
             .Where(message => message.SenderId == userId || message.RecipientId == userId)
             .GroupBy(message => message.SenderId == userId ? message.RecipientId : message.SenderId)
             .Select(group => group.OrderByDescending(m => m.DateSent)
-                .Select(message => new ContactDto(message, message.SenderId == userId))
+                .Select(message => new ContactDto {
+                    Id = message.SenderId == userId ? message.RecipientId : message.SenderId,
+                    DisplayName = message.SenderId == userId 
+                        ? message.Recipient == null ? null : message.Recipient.DisplayName 
+                        : message.Sender == null ? null : message.Sender.DisplayName,
+                    ProfileImageUrl = message.SenderId == userId 
+                        ? message.Recipient == null || message.Recipient.ProfileImage == null ? null : message.Recipient.ProfileImage.Url 
+                        : message.Sender == null || message.Sender.ProfileImage == null ? null : message.Sender.ProfileImage.Url,
+                    LastMessage = message.SenderId == userId ? "" : message.Content,
+                    LastMessageDate = message.DateSent,
+                    WasLastMessageRead = message.DateRead != null
+                })
                 .First()
             )
             .ToListAsync();
     }
 
-    public async Task<ManagerResponse<MessageGroupDto>> AddMessageGroup (MessageGroup group)
-    {
-        context.MessageGroups.Add(group);
-        if (await context.SaveChangesAsync() == 0)
-        {
-            return new ManagerResponse<MessageGroupDto>()
-            {
-                ResponseType = ManagerResponseType.BadRequest,
-                ErrorMessages =  [$"Unable to add group with name {group.Name}"]
-            };
-        }
-
-        return new ManagerResponse<MessageGroupDto>(new MessageGroupDto(group));
-    }
-
     public async Task<ManagerResponse<MessageGroupDto>> AddConnectionToMessageGroup (string groupName, MessageConnection connection)
     {
-        var group = await context.MessageGroups.FindAsync(groupName);
-
-        if (group == null)
+        using (var transaction = await context.Database.BeginTransactionAsync())
         {
-            return new ManagerResponse<MessageGroupDto>()
+            try
             {
-                ResponseType = ManagerResponseType.NotFound,
-                ErrorMessages = [$"Unable to find group with name {groupName}"]
-            };
-        }
+                var group = await context.MessageGroups.FindAsync(groupName);
 
-        connection.MessageGroupName = group.Name;
-        group.Connections.Add(connection);
-        if (await context.SaveChangesAsync() == 0)
-        {
-            return new ManagerResponse<MessageGroupDto>()
+                if (group == null)
+                {
+                    group = new MessageGroup() { Name = groupName };
+                    context.MessageGroups.Add(group);
+                }
+
+                connection.MessageGroupName = group.Name;
+                group.Connections.Add(connection);
+                if (await context.SaveChangesAsync() == 0)
+                {
+                    return new ManagerResponse<MessageGroupDto>()
+                    {
+                        ResponseType = ManagerResponseType.BadRequest,
+                        ErrorMessages = [$"Unable to add connection to group {groupName}"]
+                    };
+                }
+
+                await transaction.CommitAsync();
+
+                return new ManagerResponse<MessageGroupDto>(group.Adapt<MessageGroupDto>());
+            } catch (Exception ex)
             {
-                ResponseType = ManagerResponseType.BadRequest,
-                ErrorMessages = [$"Unable to add connection to group {groupName}"]
-            };
+                await transaction.RollbackAsync();
+                return new ManagerResponse<MessageGroupDto>()
+                {                    
+                    ResponseType = ManagerResponseType.BadRequest,
+                    ErrorMessages = [ex.Message]
+                };
+            }
         }
-
-        return new ManagerResponse<MessageGroupDto>(new MessageGroupDto(group));
     }
 
-    public async Task<bool> RemoveMessageConnection (string connectionId)
+    public async Task<ManagerResponse<MessageGroupDto?>> RemoveMessageConnection (string connectionId)
     {
-        var connection = await context.MessageConnections.FindAsync(connectionId);
-        if (connection == null)
+        using (var transaction = await context.Database.BeginTransactionAsync())
         {
-            return false;
-        }
-        
-        context.MessageConnections.Remove(connection);
-        return await context.SaveChangesAsync() > 0;
-    }
+            try
+            {
+                var connection = await context.MessageConnections.FindAsync(connectionId);
+                if (connection == null)
+                {
+                    return new ManagerResponse<MessageGroupDto?>()
+                    {
+                        ResponseType = ManagerResponseType.NotFound,
+                        ErrorMessages = [$"Unable to find connection with id {connectionId}"]
+                    };
+                }
+                
+                var group = await context.MessageGroups.FindAsync(connection.MessageGroupName);
+                if (group == null)
+                {
+                    return new ManagerResponse<MessageGroupDto?>()
+                    {
+                        ResponseType = ManagerResponseType.NotFound,
+                        ErrorMessages = [$"Unable to find group associated with a connection with id {connectionId}"]
+                    };
+                }
+                
+                context.MessageConnections.Remove(connection);
+                // If this is the last connection in its group, also delete the group.
+                if (group.Connections.Count() == 1)
+                {
+                    context.MessageGroups.Remove(group);
+                }
 
-    public async Task<MessageConnectionDto?> GetMessageConnection(string connectionId)
-    {
-        return await context.MessageConnections
-            .Where(messageConnection => messageConnection.Id == connectionId)
-            .Select(messageConnection => new MessageConnectionDto(messageConnection))
-            .FirstOrDefaultAsync();
+                if (await context.SaveChangesAsync() == 0)
+                {
+                    
+                    return new ManagerResponse<MessageGroupDto?>()
+                    {
+                        ResponseType = ManagerResponseType.BadRequest,
+                        ErrorMessages = [$"Unable to delete connection with id {connectionId}"]
+                    };
+                }
+
+                await transaction.CommitAsync();
+
+                return new ManagerResponse<MessageGroupDto?>(group.Adapt<MessageGroupDto>());
+            } catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return new ManagerResponse<MessageGroupDto?>()
+                {                    
+                    ResponseType = ManagerResponseType.BadRequest,
+                    ErrorMessages = [ex.Message]
+                };
+            }
+        }
     }
 
     public async Task<MessageGroupDto?> GetMessageGroup(string groupName)
@@ -281,7 +345,7 @@ public class MessageManager(DataContext context, ICraftyUserManager userManager)
         return await context.MessageGroups
             .Include(group => group.Connections)
             .Where(group => group.Name == groupName)
-            .Select(group => new MessageGroupDto(group))
+            .ProjectToType<MessageGroupDto>()
             .FirstOrDefaultAsync();
     }
 
@@ -291,7 +355,7 @@ public class MessageManager(DataContext context, ICraftyUserManager userManager)
         return await context.MessageGroups
             .Where(group => group.Connections.Any(connection => connection.Id == connectionId))
             .Include(group => group.Connections)
-            .Select(group => new MessageGroupDto(group))
+            .ProjectToType<MessageGroupDto>()
             .FirstOrDefaultAsync();
     }
     

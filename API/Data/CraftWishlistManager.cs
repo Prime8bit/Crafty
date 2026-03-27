@@ -1,42 +1,33 @@
 using API.Data.Configuration;
-using API.DTOs;
 using API.Entities;
 using API.Misc;
 using API.Pagination;
+using CraftyCommon.DTOs;
+using Mapster;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data;
 
 public class CraftWishlistManager (
-    DataContext context, 
-    ICraftyUserManager userManager, 
-    ICraftManager craftManager): ICraftWishlistManager
+    DataContext context,
+    UserManager<User> userManager): ICraftWishlistManager
 {
-    public async Task<ManagerResponse> ToggleWishlistItemAsync(CraftWishlistItemDto craftWishlistDto)
+    public async Task<ManagerResponse> ToggleWishlistItemAsync(WishlistItemDto craftWishlistDto)
     {
-        var user = await userManager.GetUserAsync(craftWishlistDto.WishlistingUserId);
-        
-        if (user == null)
-        {
-            return new ManagerResponse()
-            {
-                ResponseType = ManagerResponseType.NotFound,
-                ErrorMessages = [$"A user with id {craftWishlistDto.WishlistingUserId} does not exist."]
-            };
-        }
 
-        var craft = await craftManager.GetCraftAsync(craftWishlistDto.WishListedCraftId);
+        var craft = await context.Crafts.FindAsync(craftWishlistDto.WishlistedCraftId);
 
         if (craft == null)
         {
             return new ManagerResponse()
             {
                 ResponseType = ManagerResponseType.NotFound,
-                ErrorMessages = [$"A craft with id {craftWishlistDto.WishListedCraftId} does not exist."]
+                ErrorMessages = [$"A craft with id {craftWishlistDto.WishlistedCraftId} does not exist."]
             };
         }
 
-        if (craft.SellerUserName?.ToUpper() == user.UserName?.ToUpper())
+        if (craft.SellerId == craftWishlistDto.WishlistingUserId)
         {            
             return new ManagerResponse()
             {
@@ -46,7 +37,7 @@ public class CraftWishlistManager (
         }
 
         var craftWishlistItem = await context.CraftWishlistItems
-                .Where(craftWishlistItem => craftWishlistItem.WishListedCraftId == craftWishlistDto.WishListedCraftId 
+                .Where(craftWishlistItem => craftWishlistItem.WishlistedCraftId == craftWishlistDto.WishlistedCraftId 
                 && craftWishlistItem.WishlistingUserId == craftWishlistDto.WishlistingUserId)
                 .FirstOrDefaultAsync();
 
@@ -55,7 +46,7 @@ public class CraftWishlistManager (
             var wishlistItem = new WishlistItem()
             {
                 WishlistingUserId = craftWishlistDto.WishlistingUserId,
-                WishListedCraftId = craftWishlistDto.WishListedCraftId
+                WishlistedCraftId = craftWishlistDto.WishlistedCraftId
             };
 
             context.CraftWishlistItems.Add(wishlistItem);
@@ -64,7 +55,7 @@ public class CraftWishlistManager (
                 return new ManagerResponse()
                 {
                     ResponseType = ManagerResponseType.BadRequest,
-                    ErrorMessages = [$"User with id {craftWishlistDto.WishlistingUserId} failed to wishlist craft with id {craftWishlistDto.WishListedCraftId}."]
+                    ErrorMessages = [$"User with id {craftWishlistDto.WishlistingUserId} failed to wishlist craft with id {craftWishlistDto.WishlistedCraftId}."]
                 };
             }
             
@@ -78,7 +69,7 @@ public class CraftWishlistManager (
                 return new ManagerResponse()
                 {
                     ResponseType = ManagerResponseType.BadRequest,
-                    ErrorMessages = [$"User with id {craftWishlistDto.WishlistingUserId} failed to delete wishlist for craft with id {craftWishlistDto.WishListedCraftId}."]
+                    ErrorMessages = [$"User with id {craftWishlistDto.WishlistingUserId} failed to delete wishlist for craft with id {craftWishlistDto.WishlistedCraftId}."]
                 };
             }
         }
@@ -86,24 +77,24 @@ public class CraftWishlistManager (
         return new ManagerResponse() { ResponseType = ManagerResponseType.Ok };
     }
 
-    public async Task<ManagerResponse<CraftWishlistItemDto>> GetCraftWishlistItemAsync(long userId, long craftId)
+    public async Task<ManagerResponse<WishlistItemDto>> GetCraftWishlistItemAsync(long userId, long craftId)
     {
-        var user = await userManager.GetUserAsync(userId);
+        var user = await userManager.FindByIdAsync(userId.ToString());
         
         if (user == null)
         {
-            return new ManagerResponse<CraftWishlistItemDto>()
+            return new ManagerResponse<WishlistItemDto>()
             {
                 ResponseType = ManagerResponseType.NotFound,
                 ErrorMessages = [$"A user with id {userId} does not exist."]
             };
         }
 
-        var craft = await craftManager.GetCraftAsync(craftId);
+        var craft = await context.Crafts.FindAsync(craftId);
 
         if (craft == null)
         {
-            return new ManagerResponse<CraftWishlistItemDto>()
+            return new ManagerResponse<WishlistItemDto>()
             {
                 ResponseType = ManagerResponseType.NotFound,
                 ErrorMessages = [$"A craft with id {craftId} does not exist."]
@@ -111,22 +102,22 @@ public class CraftWishlistManager (
         }
 
         var craftWishlistItem = await context.CraftWishlistItems
-                .Select(craftWishlistItem => new CraftWishlistItemDto(craftWishlistItem))
-                .Where(craftWishlistItem => craftWishlistItem.WishListedCraftId == craftId && craftWishlistItem.WishlistingUserId == userId)
+                .Where(craftWishlistItem => craftWishlistItem.WishlistedCraftId == craftId && craftWishlistItem.WishlistingUserId == userId)
+                .ProjectToType<WishlistItemDto>()
                 .FirstOrDefaultAsync();
 
         if (craftWishlistItem == null)
         {
             // It is not an error for an item to not be wishlisted.
-            return new ManagerResponse<CraftWishlistItemDto>() { ResponseType = ManagerResponseType.Ok };
+            return new ManagerResponse<WishlistItemDto>() { ResponseType = ManagerResponseType.Ok };
         }
 
-        return new ManagerResponse<CraftWishlistItemDto>(craftWishlistItem);
+        return new ManagerResponse<WishlistItemDto>(craftWishlistItem);
     }
 
     public async Task<ManagerResponse<List<long>>> GetWishlistedCraftIdsForUserAsync(long userId)
     {
-        var user = await userManager.GetUserAsync(userId);
+        var user = await userManager.FindByIdAsync(userId.ToString());
         
         if (user == null)
         {
@@ -139,13 +130,13 @@ public class CraftWishlistManager (
 
         return new ManagerResponse<List<long>>(await context.CraftWishlistItems
             .Where(wishlist => wishlist.WishlistingUserId == userId)
-            .Select(wishlist => wishlist.WishListedCraftId)
+            .Select(wishlist => wishlist.WishlistedCraftId)
             .ToListAsync());
     }
 
     public async Task<ManagerResponse<PagedList<CraftDto>>> GetWishlistedCraftsForUserAsync(long userId, CraftListParams craftListParams)
     {
-        var user = await userManager.GetUserAsync(userId);
+        var user = await userManager.FindByIdAsync(userId.ToString());
         
         if (user == null)
         {
@@ -158,43 +149,43 @@ public class CraftWishlistManager (
 
         var query = context.CraftWishlistItems
             .Where( wishlist => wishlist.WishlistingUserId == userId
-                && wishlist.WishListedCraft.Price >= craftListParams.MinPrice 
-                && wishlist.WishListedCraft.Price <= craftListParams.MaxPrice);
+                && wishlist.WishlistedCraft!.Price >= craftListParams.MinPrice 
+                && wishlist.WishlistedCraft!.Price <= craftListParams.MaxPrice);
 
         if (craftListParams.InStockOnly)
         {
-            query = query.Where(wishlist => wishlist.WishListedCraft.Stock > 0);
+            query = query.Where(wishlist => wishlist.WishlistedCraft!.Stock > 0);
         }
 
         query = craftListParams.OrderBy.ToLower() switch
         {
             "price" => craftListParams.IsOrderDescending ? 
-                query.OrderByDescending(wishlist => wishlist.WishListedCraft.Price) 
-                : query.OrderBy(wishlist => wishlist.WishListedCraft.Price),
+                query.OrderByDescending(wishlist => wishlist.WishlistedCraft!.Price) 
+                : query.OrderBy(wishlist => wishlist.WishlistedCraft!.Price),
             "name" => craftListParams.IsOrderDescending ? 
-                query.OrderByDescending(wishlist => wishlist.WishListedCraft.Name) 
-                : query.OrderBy(wishlist => wishlist.WishListedCraft.Name),
+                query.OrderByDescending(wishlist => wishlist.WishlistedCraft!.Name) 
+                : query.OrderBy(wishlist => wishlist.WishlistedCraft!.Name),
             _ => craftListParams.IsOrderDescending ? 
-                query.OrderByDescending(wishlist => wishlist.WishListedCraft.CreatedAt) 
-                : query.OrderBy(wishlist => wishlist.WishListedCraft.CreatedAt),
+                query.OrderByDescending(wishlist => wishlist.WishlistedCraft!.CreatedAt) 
+                : query.OrderBy(wishlist => wishlist.WishlistedCraft!.CreatedAt),
         };
 
-        var resultQuery = query.Include(wishlist => wishlist.WishListedCraft.Seller)
+        var resultQuery = query.Include(wishlist => wishlist.WishlistedCraft!.Seller)
             .Select(wishlist => new CraftDto()
             {
-                Id = wishlist.WishListedCraft.Id,
-                Name = wishlist.WishListedCraft.Name,
-                Price = wishlist.WishListedCraft.Price,
-                Stock = wishlist.WishListedCraft.Stock,
-                CreatedAt = wishlist.WishListedCraft.CreatedAt.ToString("o"), // ISO 8601 format,
-                SellerUserName = wishlist.WishListedCraft.Seller.UserName,
-                SellerDisplayName = wishlist.WishListedCraft.Seller.DisplayName,
-                SearchImageId = wishlist.WishListedCraft.SearchImageId,
-                SearchImage = wishlist.WishListedCraft.SearchImage == null ? 
-                    null :
-                    new CraftMediaDto(wishlist.WishListedCraft.SearchImage){ CraftName = wishlist.WishListedCraft.Name },
+                Id = wishlist.WishlistedCraft!.Id,
+                Name = wishlist.WishlistedCraft!.Name,
+                Price = wishlist.WishlistedCraft!.Price,
+                Stock = wishlist.WishlistedCraft!.Stock,
+                CreatedAt = wishlist.WishlistedCraft!.CreatedAt.ToString("o"), // ISO 8601 format,
+                SellerId = wishlist.WishlistedCraft!.SellerId,
+                SellerDisplayName = wishlist.WishlistedCraft!.Seller == null ? 
+                    null : wishlist.WishlistedCraft.Seller!.DisplayName,
+                SearchImageId = wishlist.WishlistedCraft!.SearchImageId,
+                SearchImage = wishlist.WishlistedCraft!.SearchImage == null ? 
+                    null : wishlist.WishlistedCraft.SearchImage.Adapt<CraftMediaDto>(),
                 // I intentionally leave out the Media collection here since the list endpoint doesn't need it, and it would be a waste of resources to include it.            
-                IsArchived = wishlist.WishListedCraft.IsArchived
+                IsArchived = wishlist.WishlistedCraft!.IsArchived
             });
         return new ManagerResponse<PagedList<CraftDto>>(
             await PagedList<CraftDto>.CreateAsync(resultQuery, craftListParams.PageNumber, craftListParams.PageSize));
@@ -202,7 +193,7 @@ public class CraftWishlistManager (
 
     public async Task<ManagerResponse<int>> GetNumLikesForCraftAsync(long craftId)
     {
-        var craft = await craftManager.GetCraftAsync(craftId);
+        var craft = await context.Crafts.FindAsync(craftId);
 
         if (craft == null)
         {
@@ -214,7 +205,7 @@ public class CraftWishlistManager (
         }
 
         return new ManagerResponse<int>(await context.CraftWishlistItems
-            .Where(wishlist => wishlist.WishListedCraftId == craftId)
+            .Where(wishlist => wishlist.WishlistedCraftId == craftId)
             .CountAsync());
     }
 }

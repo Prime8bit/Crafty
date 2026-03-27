@@ -1,9 +1,12 @@
 .vscode
+.vs
 Notes.txt
 
 # ASP.NET
 API/bin
 API/obj
+API/Crafty.postman_collection.json
+API/Models
 
 # Node
 client/node_modules

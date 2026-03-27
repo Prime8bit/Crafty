@@ -10,7 +10,7 @@ ENV ASPNETCORE_URLS=http://0.0.0.0:5000
 WORKDIR /Crafty
 
 # Bake the code and dependencies
-RUN git clone https://github.com/Prime8bit/Crafty.git . \
+RUN git clone --recurse-submodules http://dev.prime8bit.com/Prime8bit/Crafty.git . \
     && dotnet restore API/API.csproj
     
 WORKDIR /Crafty/API
