@@ -1,7 +1,53 @@
 # Crafty Web app
+This is an example of a simple e-commerce store that resembles Etsy.
 This is meant to be a portfolio piece for demonstrating my knowledge in C#, ASP.NET, and Angular so it is open for issues but closed for pull requests. This repository includes two projects:
 - A C#/ASP.NET/Entity Framework backend.
 - An Angular frontend.
+
+# Design
+The original design for this application is deliberately simple. Because this is a portfolio piece, ease of running on a single machine was prioritized over typical good scaling practices. This is the design right now:
+
+<!-- I can't use a comment here because mermaid code contains the end comment sequence -->
+<details>
+<summary>Mermaid source (hidden)</summary>
+
+    flowchart LR
+        webClient(fa:fa-laptop Web)
+
+        webClient --> server(fa:fa-server Server)
+            server --> db(fa:fa-database Database)
+            server --> cdn(fa:fa-database CDN)
+
+</details>
+
+[![Portable Design](https://mermaid.ink/img/pako:eNptkbtuwzAMRX9F4NQATmDJ8ktDl2RsO7RDgcKLbNEPwJYMRW7aGvn3-tUOQbiQlzj3cuAIhVEIAsrWXIpaWkeeXjNNprpgfmwb1O6hlKKU-1b2zvTkHfNdpm8Qst8_kjPaT7QbvQrytrTdis-17Wde5RurpJO5PCM5bcN9vlD61nA8vezAg8o2CoSzA3rQoe3kLGGcUzJwNXaYgZjGtqlql0Gmr5Opl_rDmO7PZ81Q1TClt-dJDf10A0-NrKzs_rcWtUJ7NIN2IELO6JICYoQvEIxGh5T7gR9HNKZJHHrwvW6TwE849SPOw4Cyqwc_y13_EPGQsYjFjCc09WnqAarGGfu8_mR5zfUXuKKA3Q?type=png)](https://mermaid.ai/live/edit#pako:eNptkbtuwzAMRX9F4NQATmDJ8ktDl2RsO7RDgcKLbNEPwJYMRW7aGvn3-tUOQbiQlzj3cuAIhVEIAsrWXIpaWkeeXjNNprpgfmwb1O6hlKKU-1b2zvTkHfNdpm8Qst8_kjPaT7QbvQrytrTdis-17Wde5RurpJO5PCM5bcN9vlD61nA8vezAg8o2CoSzA3rQoe3kLGGcUzJwNXaYgZjGtqlql0Gmr5Opl_rDmO7PZ81Q1TClt-dJDf10A0-NrKzs_rcWtUJ7NIN2IELO6JICYoQvEIxGh5T7gR9HNKZJHHrwvW6TwE849SPOw4Cyqwc_y13_EPGQsYjFjCc09WnqAarGGfu8_mR5zfUXuKKA3Q)
+
+
+## Design for scale
+If I were to change this application to design for scale this is the design I would propose. Since this does process purchases, I would prioritize consistency over availability. If the system were to become partitioned, then the partitioned services would simply shut down, routing all their traffic to the remaining services that are connected to the master system. I considered breaking this apart further so that browsing and searching of crafts used a high availability service while the orders used a separate high consistency service, but I think it is too early for that level of optimization. This seemed like a good place to start.
+
+<!-- I can't use a comment here because mermaid code contains the end comment sequence -->
+<details>
+<summary>Mermaid source (hidden)</summary>
+
+    flowchart LR
+        webClient(fa:fa-laptop Web) --> loadBalancerWs(fa:fa-scale-balanced Load Balancer WS)
+            loadBalancerWs --> webServices(fa:fa-server Web Service\nfa:fa-server Web Service\n...)
+                webServices --> readDbs(fa:fa-database Read DB\nfa:fa-database Read SQL\n...)
+                webServices --> masterDb(fa:fa-database Write SQL)
+                    masterDb --> readDbs
+                webServices --> dbCache(fa:fa-database DB Cache)
+                webServices --> CDN(fa:fa-cloud CDN)
+        webClient(fa:fa-laptop Web) --> loadBalancerChat(fa:fa-scale-balanced Load Balancer Chat)    
+            loadBalancerChat --> chatService1(fa:fa-server SignalR Chat service)
+                chatService1 --> chatMessageQueue(fa:fa-envelope Chat Message\nPub/Sub Queue\nfa:fa-envelope Chat Message\nPub/Sub Queue\n...)
+                    chatMessageQueue --> chatDb(fa:fa-database Chat NoSQL\nfa:fa-database Chat NoSQL\n... )
+            loadBalancerChat --> chatService2(fa:fa-server SignalR Chat service)
+                chatService2 --> chatMessageQueue
+
+</details>
+
+[![Cloud Design](https://mermaid.ink/img/pako:eNqllE2PmzAQhv-K5VORkhQIISmHHhKO2VU3HCKtuAwwASRjR8bsto3y32vzpSS7SlPVJzwz7zMznhEnmooMaUAPTLynBUhFtruYE33eMdmwErn6coDgAFMGRyWOZI-JRabT74QJyNbAgKco93UfVKfAcJp05oxsdQwZgsg-sjq0OdfylqgzRijfyhRHnL4aISak98Qxv-OazWYXKfouBmabQyJkYTLwM1CQQI1kp80kXI_0a0f0sn0IXkGtUIbJLX0vS4WGcqM3Z9BcVnc_S5ZsIC3wNkm4Jq39LzVuwudemTLRZOZu_fvANwWoR0Zu4iwD_3zwxt2y9eqpvkznevZRmXNgu5ZE6i7kpsVL8Uh7wrqGHF8abIanQv6GTByxY_UBerA_muRr1CSkjR1X4NHoj2sx1HRZwljXx-1o-c-iW7J7Pp2JWI8_pPs_D-l--pB0QnNZZjRQssEJrVBWYK70ZEAxVQVWGNNAf7IyL1RMY37WoiPwVyGqQSdFkxdU18ZqfWuOul0MS8glVKNVIs90X6LhigYLz_FbCg1O9CcNXMefffPsub30naWzWi4m9FdnXc3tlefYvuct5o57ntDfbV575nsL1_XnjpYsvNXSnVDMSiXkU_f_SwU_lDk9_wEk45hx?type=png)](https://mermaid.ai/live/edit#pako:eNqllE2PmzAQhv-K5VORkhQIISmHHhKO2VU3HCKtuAwwASRjR8bsto3y32vzpSS7SlPVJzwz7zMznhEnmooMaUAPTLynBUhFtruYE33eMdmwErn6coDgAFMGRyWOZI-JRabT74QJyNbAgKco93UfVKfAcJp05oxsdQwZgsg-sjq0OdfylqgzRijfyhRHnL4aISak98Qxv-OazWYXKfouBmabQyJkYTLwM1CQQI1kp80kXI_0a0f0sn0IXkGtUIbJLX0vS4WGcqM3Z9BcVnc_S5ZsIC3wNkm4Jq39LzVuwudemTLRZOZu_fvANwWoR0Zu4iwD_3zwxt2y9eqpvkznevZRmXNgu5ZE6i7kpsVL8Uh7wrqGHF8abIanQv6GTByxY_UBerA_muRr1CSkjR1X4NHoj2sx1HRZwljXx-1o-c-iW7J7Pp2JWI8_pPs_D-l--pB0QnNZZjRQssEJrVBWYK70ZEAxVQVWGNNAf7IyL1RMY37WoiPwVyGqQSdFkxdU18ZqfWuOul0MS8glVKNVIs90X6LhigYLz_FbCg1O9CcNXMefffPsub30naWzWi4m9FdnXc3tlefYvuct5o57ntDfbV575nsL1_XnjpYsvNXSnVDMSiXkU_f_SwU_lDk9_wEk45hx)
 
 # Getting the code
 This project uses a submodule I created called CraftyCommon which you can see among my repositories. Ensure that submodules are downloaded and current when using this repository.
