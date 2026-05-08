@@ -26,28 +26,32 @@ The original design for this application is deliberately simple. Because this is
 ## Design for scale
 If I were to change this application to design for scale this is the design I would propose. Since this does process purchases, I would prioritize consistency over availability. If the system were to become partitioned, then the partitioned services would simply shut down, routing all their traffic to the remaining services that are connected to the master system. I considered breaking this apart further so that browsing and searching of crafts used a high availability service while the orders used a separate high consistency service, but I think it is too early for that level of optimization. This seemed like a good place to start.
 
+I would split the web service into multiple microservices. At the very least I would have an authentication service, a chat service, and one service for the rest of the site. Authentication is needed for both chat and the rest of the site, so I would break it out so that if one of these two goes down, the other can still operate. 
+I would use Redis as a memcache for the database queries to improve response times and reduce load on the servers. I would use continue to use SQL for most web services because there are a lot of relationships between various entity types that cannot be migrated well to NoSQL and I want the ACID safety that SQL provides for purchase information. I would use NoSQL for chat because it doesn't have complex relationships, so ACID can still be maintained with few tweaks to the schema, if any. Because there are likely to be many chat messages in a small amount of time, horizontal scaling is a higher priority than with other services. 
+I would use Kafka as a message queue between the SignalR service and the NoSQL databases for a few reasons. First, I don't lose messages if the database goes down for maintenance. Second is it creates redundancy. If the message queue goes down I can still write direct to database. If the database goes down I can still write messages to the queue, but they won't be delivered until the database comes back up. 
+
 <!-- I can't use a comment here because mermaid code contains the end comment sequence -->
 <details>
 <summary>Mermaid source (hidden)</summary>
 
     flowchart LR
         webClient(fa:fa-laptop Web) --> loadBalancerWs(fa:fa-scale-balanced Load Balancer WS)
-            loadBalancerWs --> webServices(fa:fa-server Web Service\nfa:fa-server Web Service\n...)
-                webServices --> readDbs(fa:fa-database Read DB\nfa:fa-database Read SQL\n...)
+            loadBalancerWs --> webServices(fa:fa-server Web Service<br/>fa:fa-server Web Service<br/>...)
+                webServices --> readDbs(fa:fa-database Read DB<br/>fa:fa-database Read SQL<br/>...)
                 webServices --> masterDb(fa:fa-database Write SQL)
                     masterDb --> readDbs
                 webServices --> dbCache(fa:fa-database DB Cache)
                 webServices --> CDN(fa:fa-cloud CDN)
         webClient(fa:fa-laptop Web) --> loadBalancerChat(fa:fa-scale-balanced Load Balancer Chat)    
             loadBalancerChat --> chatService1(fa:fa-server SignalR Chat service)
-                chatService1 --> chatMessageQueue(fa:fa-envelope Chat Message\nPub/Sub Queue\nfa:fa-envelope Chat Message\nPub/Sub Queue\n...)
-                    chatMessageQueue --> chatDb(fa:fa-database Chat NoSQL\nfa:fa-database Chat NoSQL\n... )
+                chatService1 --> chatMessageQueue(fa:fa-envelope Chat Message<br/>Pub/Sub Queue<br/>fa:fa-envelope Chat Message<br/>Pub/Sub Queue<br/>...)
+                    chatMessageQueue --> chatDb(fa:fa-database Chat NoSQL<br/>fa:fa-database Chat NoSQL<br/>... )
             loadBalancerChat --> chatService2(fa:fa-server SignalR Chat service)
                 chatService2 --> chatMessageQueue
 
 </details>
 
-[![Cloud Design](https://mermaid.ink/img/pako:eNqllE2PmzAQhv-K5VORkhQIISmHHhKO2VU3HCKtuAwwASRjR8bsto3y32vzpSS7SlPVJzwz7zMznhEnmooMaUAPTLynBUhFtruYE33eMdmwErn6coDgAFMGRyWOZI-JRabT74QJyNbAgKco93UfVKfAcJp05oxsdQwZgsg-sjq0OdfylqgzRijfyhRHnL4aISak98Qxv-OazWYXKfouBmabQyJkYTLwM1CQQI1kp80kXI_0a0f0sn0IXkGtUIbJLX0vS4WGcqM3Z9BcVnc_S5ZsIC3wNkm4Jq39LzVuwudemTLRZOZu_fvANwWoR0Zu4iwD_3zwxt2y9eqpvkznevZRmXNgu5ZE6i7kpsVL8Uh7wrqGHF8abIanQv6GTByxY_UBerA_muRr1CSkjR1X4NHoj2sx1HRZwljXx-1o-c-iW7J7Pp2JWI8_pPs_D-l--pB0QnNZZjRQssEJrVBWYK70ZEAxVQVWGNNAf7IyL1RMY37WoiPwVyGqQSdFkxdU18ZqfWuOul0MS8glVKNVIs90X6LhigYLz_FbCg1O9CcNXMefffPsub30naWzWi4m9FdnXc3tlefYvuct5o57ntDfbV575nsL1_XnjpYsvNXSnVDMSiXkU_f_SwU_lDk9_wEk45hx?type=png)](https://mermaid.ai/live/edit#pako:eNqllE2PmzAQhv-K5VORkhQIISmHHhKO2VU3HCKtuAwwASRjR8bsto3y32vzpSS7SlPVJzwz7zMznhEnmooMaUAPTLynBUhFtruYE33eMdmwErn6coDgAFMGRyWOZI-JRabT74QJyNbAgKco93UfVKfAcJp05oxsdQwZgsg-sjq0OdfylqgzRijfyhRHnL4aISak98Qxv-OazWYXKfouBmabQyJkYTLwM1CQQI1kp80kXI_0a0f0sn0IXkGtUIbJLX0vS4WGcqM3Z9BcVnc_S5ZsIC3wNkm4Jq39LzVuwudemTLRZOZu_fvANwWoR0Zu4iwD_3zwxt2y9eqpvkznevZRmXNgu5ZE6i7kpsVL8Uh7wrqGHF8abIanQv6GTByxY_UBerA_muRr1CSkjR1X4NHoj2sx1HRZwljXx-1o-c-iW7J7Pp2JWI8_pPs_D-l--pB0QnNZZjRQssEJrVBWYK70ZEAxVQVWGNNAf7IyL1RMY37WoiPwVyGqQSdFkxdU18ZqfWuOul0MS8glVKNVIs90X6LhigYLz_FbCg1O9CcNXMefffPsub30naWzWi4m9FdnXc3tlefYvuct5o57ntDfbV575nsL1_XnjpYsvNXSnVDMSiXkU_f_SwU_lDk9_wEk45hx)
+[![Cloud Design](https://mermaid.ink/img/pako:eNqlUsFum0AQ_ZXVnopkExsbHFCVg83RjRpzsFRxmYUxoAKLliVpa_nfu4vBxa6bxOmemJk3780Mb08jHiP16C7nL1EKQpL1JixJ916QrfIMS_lpB94OxjlUkldki8wg4_EDyTnES8ihjFBs6w5UR5DjmB3TMVkrDOlBZBsYf-j1O6doWZVqgOI5i_BEqULdjIx0lc9M3D28WjRN80Kq26jnbrUEQuyzXicGCQxqJBuVJv5yoHJeCp7WN4gUUEsUPrtU2YpMoua6wqFf3zec9G21mK0gSvFSzF-SNv-OeVf-Y9cd5byJdWx8zBSrFOR7bKFxhib_tzk0pOVXNpXduNNzfwRZUkK-adlIfYRcWXdIcGL8gnUNCT412PSnw_IZc17hka8DtL_9a8PugoaRFj0wyS0d163Tzzcc5zTj3w5qdR55b8fXq0qRGLcd2PrfA1tXD0xHNBFZTD0pGhzRAkUBOqR7TRZSmWKBIfXUZwzie0jD8qB6Kii_cV70bYI3SUrVeHmtoqZSe6OfQSKgOGUFlrFajTelpJ5ltxzU29Mf1Js5U3PmLibufGE5tqOLP6k3d03nfmFPFo7lzty5PTuM6K9WdGLqvHqWNZ3c21PXOfwGmKKZ7w?type=png)](https://mermaid.ai/live/edit#pako:eNqlUsFum0AQ_ZXVnopkExsbHFCVg83RjRpzsFRxmYUxoAKLliVpa_nfu4vBxa6bxOmemJk3780Mb08jHiP16C7nL1EKQpL1JixJ916QrfIMS_lpB94OxjlUkldki8wg4_EDyTnES8ihjFBs6w5UR5DjmB3TMVkrDOlBZBsYf-j1O6doWZVqgOI5i_BEqULdjIx0lc9M3D28WjRN80Kq26jnbrUEQuyzXicGCQxqJBuVJv5yoHJeCp7WN4gUUEsUPrtU2YpMoua6wqFf3zec9G21mK0gSvFSzF-SNv-OeVf-Y9cd5byJdWx8zBSrFOR7bKFxhib_tzk0pOVXNpXduNNzfwRZUkK-adlIfYRcWXdIcGL8gnUNCT412PSnw_IZc17hka8DtL_9a8PugoaRFj0wyS0d163Tzzcc5zTj3w5qdR55b8fXq0qRGLcd2PrfA1tXD0xHNBFZTD0pGhzRAkUBOqR7TRZSmWKBIfXUZwzie0jD8qB6Kii_cV70bYI3SUrVeHmtoqZSe6OfQSKgOGUFlrFajTelpJ5ltxzU29Mf1Js5U3PmLibufGE5tqOLP6k3d03nfmFPFo7lzty5PTuM6K9WdGLqvHqWNZ3c21PXOfwGmKKZ7w)
 
 # Getting the code
 This project uses a submodule I created called CraftyCommon which you can see among my repositories. Ensure that submodules are downloaded and current when using this repository.
