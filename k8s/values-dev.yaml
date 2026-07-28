@@ -1,0 +1,11 @@
+backend:
+  replicas: 2
+  image: crafty-backend:latest
+  pullSecret: codeberg-registry
+
+frontend:
+  replicas: 2
+  image: crafty-frontend:latest
+  pullSecret: codeberg-registry
+
+host: localhost

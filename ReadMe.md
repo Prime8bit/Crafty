@@ -2,7 +2,7 @@
 This is an example of a simple e-commerce store that resembles Etsy.
 This is meant to be a portfolio piece for demonstrating my knowledge in C#, ASP.NET, and Angular so it is open for issues but closed for pull requests. This repository includes two projects:
 - A C#/ASP.NET/Entity Framework backend.
-- An Angular frontend.
+- An Angular/Typescript frontend.
 
 # Design
 The original design for this application is deliberately simple. Because this is a portfolio piece, ease of running on a single machine was prioritized over typical good scaling practices. This is the design right now:
@@ -79,16 +79,17 @@ Username: zamora
 Password: password
 
 ## Running the code manually
-You will need two terminals to run this code unless you want to run them with background processes. I recommend two sessions so you can see the output of each server separately.
+You will need three terminals to run this code unless you want to run them with background processes. I recommend three sessions so you can see the output of each server separately.
 
 ### Dependencies
 - .NET SDK 9.0
-- Sqlite3
+- Docker
 - Node.js
 - npm
 - The angular cli version 18 or newer (npm install -g @angular/cli)
 - It is helpful to add dotnet and npm to your PATH in Windows. In Linux, this is usually already handled for you.
 - There are numerous third party libraries used by this repository, but they are all installed using npm for the front-end and nuget for the backend using standard npm and nuget repositories.
+
 
 ### Front-end
 - cd client
@@ -97,9 +98,9 @@ You will need two terminals to run this code unless you want to run them with ba
 Navigate to http://{ip address}:4200
 
 ### Back-end
-- dotnet clean
-- dotnet build
-- cd API
+- In Terminal 1, run "docker compose up" the rest should be in a second terminal
+    - This will boot up a postgresql server and insert some test data.
+- cd API 
 - dotnet run
     - If you get CORS errors between client and server, but postman works, then it is likely that the trusted self-signed certificate expired. This is used for testing https communication.
     - Run "dotnet dev-certs https --trust" then restart your browser. That should temporarily trust the self-signed certificate this app uses.
@@ -121,7 +122,7 @@ The TestDataTemplate in the server application is used with json-generator.com t
 - Create the ability to leave craft reviews. This would be a good example of when using a nosql database would be helpful.
 - Create a CDN abstraction layer so switching to a different CDN can be as painless as possible. 
 - Sqlite doesn't store UTC dates well. I might want to fix that manually. This probably insn't improtant for a portfolio piece. If I were to do this project again I wouldn't use sqlite at all. It was a recommendation from the angular/asp.net course I took that in hindsight was a bad idea. Migrating to another database engine may involve numerous refactors to my code and will definitely require a custom migration script. 
-- My client currently passes the raw password when registering for a new account. This is a security flaw. I should consider using a better solution.
+- My client currently passes the raw password when registering for a new account. This is a major security flaw and should be hashed before being sent, even when using https.
 - Update seed data json. Now that the app has the ability to create all entities from the front-end, there isn't much need for seed-data.
 - Deploy my app using mariadb instead of sqlite. 
     - I chose not to do this because I want people to be able to run my application quickly. If I used mariadb, then I would need to create a custom mariadb container with my database, or create a script that imports a database export on startup if the tables don't exist. Using sqlite I can just bundle my database with the code and you can run.

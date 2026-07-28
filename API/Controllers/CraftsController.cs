@@ -3,10 +3,11 @@ using API.Data;
 using API.Entities;
 using API.Extensions;
 using API.Misc;
-using API.Pagination;
+using CraftyCommon.Pagination;
 using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace API.Controllers;
 
@@ -15,6 +16,7 @@ public class CraftsController(
     ) : BaseApiController
 {
     [HttpGet]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<IEnumerable<CraftDto>>> GetCrafts([FromQuery] CraftListParams paginationParams)
     {
         var crafts = await craftManager.GetCraftsAsync(paginationParams);
@@ -24,6 +26,7 @@ public class CraftsController(
     }
 
     [HttpGet("{craftId}")]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<CraftDto>> GetCraft(long craftId)
     {
         var craft = await craftManager.GetCraftAsync(craftId);
@@ -37,6 +40,7 @@ public class CraftsController(
 
     [Authorize]
     [HttpPost]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult<CraftDto>> NewCraft(CraftDto newCraft)
     {
         if (string.IsNullOrEmpty(newCraft.Name))
@@ -59,6 +63,7 @@ public class CraftsController(
 
     [Authorize]
     [HttpPut("{craftId}")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult<CraftDto>> UpdateCraft(long craftId, CraftDto updatedCraft)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -83,6 +88,7 @@ public class CraftsController(
 
     [Authorize]
     [HttpPut("{craftId}/archive")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult<CraftDto>> ArchiveCraft(long craftId)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -97,6 +103,7 @@ public class CraftsController(
 
     [Authorize]
     [HttpPut("{craftId}/inappropriate")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult> MarkCraftAsInappropriate(long craftId)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -111,6 +118,7 @@ public class CraftsController(
 
     [Authorize(Policy = Policies.RequireAdminRole)]
     [HttpPut("{craftId}/appropriate")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult> MarkCraftAsAppropriate(long craftId)
     {
         return GetActionResult(await craftManager.MarkCraftAsAppropriateAsync(craftId));
@@ -118,6 +126,7 @@ public class CraftsController(
 
     [Authorize(Policy = Policies.RequireAdminRole)]
     [HttpGet("inappropriate")]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<PagedList<Craft>>> GetInappropriateCrafts([FromQuery] PaginationParams paginationParams)
     { 
         var craftPagedList = await craftManager.GetInappropriateCraftsAsync(paginationParams);

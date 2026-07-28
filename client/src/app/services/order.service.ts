@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { PaginatedResult } from '../models/pagination';
+import { PaginatedList } from '../models/pagination';
 import { Order, OrderStatus } from '../models/order';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { OrderListParams } from '../models/order-list-params';
@@ -19,7 +19,7 @@ export class OrderService {
 
     baseUrl = environment.apiUrl;
 
-    paginatedResult = signal<PaginatedResult<OrderListItem[]>>(new PaginatedResult<OrderListItem[]>());
+    paginatedResult = signal<PaginatedList<OrderListItem>>(new PaginatedList<OrderListItem>());
     orderListParams = signal<OrderListParams>(new OrderListParams());
     // Record should be used instead of Map because Map doesn't play well with Angular's signal change detection
 

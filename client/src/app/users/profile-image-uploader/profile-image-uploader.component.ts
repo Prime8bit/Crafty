@@ -26,12 +26,12 @@ export class ProfileImageUploaderComponent implements OnInit{
     }
 
     loadUser(): void {
-        const user = this.accountService.currentUser();
-        if (!user) {
+        const currentUser = this.accountService.currentUser();
+        if (!currentUser) {
             return;
         }
 
-        this.userService.getUser(user.userId).subscribe({
+        this.userService.getUser(currentUser.userId).subscribe({
             next: (user) => {
                 this.user = user;
                 this.currentImageUrl = this.user?.profileImage?.url;

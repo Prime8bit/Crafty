@@ -1,11 +1,6 @@
 <div class="card mb-4">
     <div class="card-img-wrapper d-flex justify-content-center align-items-center">
-        @if (craft().searchImage)
-        {
-            <img class="card-img-top" src="{{craft().searchImage?.url || ''}}" alt="{{craft().name}}">
-        } @else {
-            <img class="card-img-top" src="assets/DefaultCraft.jpg" alt="{{craft().name}}">
-        }
+        <img class="card-img-top" [src]="craft().searchImage?.url || 'assets/DefaultCraft.jpg'" alt="{{craft().name}}">
         <ul class="list-inline craft-icons animate text-center">
             <li class="list-inline-item">
                 <button routerLink="/craft/{{craft().id}}" class="btn btn-primary"><i class="fa fa-info-circle"></i></button>
@@ -29,7 +24,10 @@
                         ><i class="fa fa-heart"></i></button>
                 </li>
                 <li class="list-inline-item">
-                    <button class="btn btn-primary"><i class="fa fa-envelope"></i></button>
+                    <a class="btn btn-primary"
+                        [routerLink] = "['/chat']" 
+                        [queryParams] = "{ selectedUser: craft().sellerId }"
+                    ><i class="fa fa-envelope"></i></a>
                 </li>
             }
         </ul>

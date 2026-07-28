@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddIdentityServices(builder.Configuration);
+builder.Services.AddRateLimitingServices();
 builder.Services.Configure<KestrelServerOptions>(options =>
 {
     // Set the max request body size to 100 MB
@@ -25,13 +26,19 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseMiddleware<ExceptionMiddleware>();
+
+#if DEBUG
+// The docker/k8s containers use a reverse proxy to keep traffic on the same host:port
+// When in development, I need to allow CORS from the frontend because it runs on a different port
 app.UseCors(policyBuilder => policyBuilder.AllowAnyHeader().AllowAnyMethod().AllowCredentials()
 .WithOrigins("http://localhost:4200", "https://localhost:4200"));
+#endif
 
 // Authentication MUST come before Authorization and both need to happen
 // before mapping controllers.
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {

@@ -1,9 +1,11 @@
 using System.Security.Claims;
 using API.Data;
-using API.Pagination;
+using CraftyCommon.Pagination;
 using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using API.Extensions;
 
 namespace API.Controllers;
 
@@ -11,6 +13,7 @@ namespace API.Controllers;
 public class MessagesController(IMessageManager messageManager) : BaseApiController
 {
     [HttpGet("{messageId}")]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<MessageDto>> GetMessage(long messageId)
     {        
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -24,6 +27,7 @@ public class MessagesController(IMessageManager messageManager) : BaseApiControl
     }
 
     [HttpGet("thread/{recipientId}")]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<PagedList<MessageDto>>> GetMessageThread(long recipientId, [FromQuery] PaginationParams paginationParams)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -37,6 +41,7 @@ public class MessagesController(IMessageManager messageManager) : BaseApiControl
     }
     
     [HttpPost]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult<MessageDto>> CreateMessage(CreateMessageDto messageDto)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -53,6 +58,7 @@ public class MessagesController(IMessageManager messageManager) : BaseApiControl
     }
 
     [HttpDelete("{messageId}")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult> DeleteMessage(long messageId)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -66,6 +72,7 @@ public class MessagesController(IMessageManager messageManager) : BaseApiControl
     }    
 
     [HttpGet("contacts")]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<IEnumerable<ContactDto>>> GetContacts()
     {   
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

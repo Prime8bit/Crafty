@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using API.Data;
+using API.Extensions;
 using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace API.Controllers;
 
@@ -11,6 +13,7 @@ public class UsersController(ICraftyUserManager userManager) : BaseApiController
 {
     [AllowAnonymous]
     [HttpGet]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
     {
         return Ok(await userManager.GetUsersAsync());
@@ -18,6 +21,7 @@ public class UsersController(ICraftyUserManager userManager) : BaseApiController
 
     [AllowAnonymous]
     [HttpGet("{userId}")]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<UserDto>> GetUser(long userId)
     {
         var userDto = await userManager.GetUserAsync(userId);
@@ -31,6 +35,7 @@ public class UsersController(ICraftyUserManager userManager) : BaseApiController
     }
 
     [HttpPut]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult<UserDto>> UpdateUser(UserDto userDto)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -64,6 +69,7 @@ public class UsersController(ICraftyUserManager userManager) : BaseApiController
     }
     
     [HttpPost("set-profile-image")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult<UserMediaDto>> SetProfileImage([FromForm] IFormFile file)
     {
         

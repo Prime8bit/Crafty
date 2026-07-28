@@ -1,21 +1,5 @@
-FROM node:20-alpine AS build
-EXPOSE 4200
+FROM nginx:1.31.3
 
-# Set working directory
-WORKDIR /Crafty
+COPY client/dist/client/browser /usr/share/nginx/html
 
-# Install Angular CLI globally
-RUN npm install -g @angular/cli@^18
-
-# Copy repository and install
-RUN apk add --no-cache git \
-    && git clone --recurse-submodules https://codeberg.org/Prime8bit/Crafty.git . 
-
-# Expose Angular dev server port
-
-WORKDIR /Crafty/client
-
-RUN npm install
-
-# Start Angular app in dev mode
-CMD ["ng", "serve", "--host", "0.0.0.0"]
+EXPOSE 80

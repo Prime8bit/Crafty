@@ -1,7 +1,7 @@
 using API.Data.Configuration;
 using API.Entities;
 using API.Misc;
-using API.Pagination;
+using CraftyCommon.Pagination;
 using CraftyCommon.DTOs;
 using Mapster;
 using Microsoft.AspNetCore.Identity;

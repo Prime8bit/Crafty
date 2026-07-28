@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Craft } from '../models/craft';
-import { PaginatedResult } from '../models/pagination';
+import { PaginatedList } from '../models/pagination';
 import { CraftListParams } from '../models/craft-list-params';
 import { Observable, Subscription } from 'rxjs';
 
@@ -14,7 +14,7 @@ export class WishlistService {
     private http = inject(HttpClient)
 
     baseUrl = environment.apiUrl;
-    paginatedResult = signal<PaginatedResult<Craft[]>>(new PaginatedResult<Craft[]>());
+    paginatedResult = signal<PaginatedList<Craft>>(new PaginatedList<Craft>());
     wishlistIds = signal<number[]>([]);
     craftListParams = signal<CraftListParams>(new CraftListParams());
     

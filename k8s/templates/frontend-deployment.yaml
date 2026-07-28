@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-frontend
+  labels:
+    app: crafty-frontend
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.frontend.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.frontend.app }}
+    spec:
+      {{- if eq .Values.frontend.mode "release"}}
+      {{- if .Values.frontend.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.frontend.pullSecret }}
+      {{ end }}
+      {{ end }}
+      containers:
+        - name: frontend
+          image: {{ .Values.frontend.image }}
+          {{- if eq .Values.mode "release"}}
+          imagePullPolicy: IfNotPresent
+          {{- else }}
+          imagePullPolicy: Never # build the image manually for dev mode
+          {{- end }}
+          ports:
+            - containerPort: {{ .Values.frontend.port }}

@@ -1,0 +1,11 @@
+backend:
+  replicas: 3
+  image: codeberg.org/prime8bit/craft-backend # TODO: update this when you upload containers to codeberg
+  pullSecret: codeberg-registry
+
+frontend:
+  replicas: 3
+  image: codeberg.org/prime8bit/craft-frontend # TODO: update this when you upload containers to codeberg
+  pullSecret: codeberg-registry
+
+host: crafty.prime8bit.com

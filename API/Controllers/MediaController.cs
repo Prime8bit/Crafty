@@ -1,8 +1,10 @@
+using API.Extensions;
 using API.Services;
 using CloudinaryDotNet.Actions;
 using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace API.Controllers;
 
@@ -14,6 +16,7 @@ public class MediasController (ICloudMediaService cloudMediaService) : BaseApiCo
     readonly string[] model3dExtensions = { ".glb"};
 
     [HttpPost]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult<MediaDto>> UploadMedia([FromForm] IFormFile file)
     {
         MediaType type = MediaType.None;
@@ -82,6 +85,7 @@ public class MediasController (ICloudMediaService cloudMediaService) : BaseApiCo
     }
 
     [HttpDelete("images/{cloudId}")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult> DeleteImage(string cloudId)
     {
         cloudId = Uri.UnescapeDataString(cloudId);
@@ -101,6 +105,7 @@ public class MediasController (ICloudMediaService cloudMediaService) : BaseApiCo
     }
 
     [HttpDelete("videos/{cloudId}")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult> DeleteVideo(string cloudId)
     {
         cloudId = Uri.UnescapeDataString(cloudId);
@@ -123,6 +128,7 @@ public class MediasController (ICloudMediaService cloudMediaService) : BaseApiCo
     // Every delete function for another of my data types that doesn't represent
     // images or data should be mapped to rawdata
     [HttpDelete("model3d/{cloudId}")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult> DeleteRawData(string cloudId)
     {
         cloudId = Uri.UnescapeDataString(cloudId);

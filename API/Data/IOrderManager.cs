@@ -1,5 +1,5 @@
 using API.Misc;
-using API.Pagination;
+using CraftyCommon.Pagination;
 using CraftyCommon.DTOs;
 
 namespace API.Data;

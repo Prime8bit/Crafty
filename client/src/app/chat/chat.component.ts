@@ -22,7 +22,6 @@ export class ChatComponent implements AfterViewChecked{
     private router = inject(Router);
     private route = inject(ActivatedRoute);
     private userService = inject(UserService);
-    private isConnectedToMessageHub = false;
 
     messageService = inject(MessageService);
     otherUserId?: number;

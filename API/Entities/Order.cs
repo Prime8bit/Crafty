@@ -7,7 +7,7 @@ namespace API.Entities;
 public class Order
 {
     public long Id { get; set; }
-    public DateOnly OrderDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+    public DateOnly OrderDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
     public float TotalPrice { get; set; } = 0f;
     public required string ShippingName { get; set; }
     public required string ShippingAddress { get; set; }

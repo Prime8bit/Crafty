@@ -1,6 +1,8 @@
 using API.Data;
+using API.Extensions;
 using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace API.Controllers;
 
@@ -8,6 +10,7 @@ public class AccountsController(IAccountManager accountRepo) : BaseApiController
 {
 
     [HttpPost("register")]
+    [EnableRateLimiting(RateLimiters.Register)]
     public async Task<ActionResult<UserTokenDto>> Register(RegisterDto regDto)
     {
         var regDtoErrors = new List<string>();
@@ -20,6 +23,7 @@ public class AccountsController(IAccountManager accountRepo) : BaseApiController
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting(RateLimiters.Login)]
     public async Task<ActionResult<UserTokenDto>> Login(UserLoginRequestDto loginDto)
     {        
         var regDtoErrors = new List<string>();

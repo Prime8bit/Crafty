@@ -2,15 +2,17 @@ using System.Security.Claims;
 using API.Data;
 using API.Extensions;
 using API.Misc;
-using API.Pagination;
+using CraftyCommon.Pagination;
 using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace API.Controllers;
 
 public class OrdersController (IOrderManager orderManager) : BaseApiController
 {    
     [HttpGet]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<PagedList<OrderListItemDto>>> GetOrders([FromQuery]OrderListParams listParams)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -31,6 +33,7 @@ public class OrdersController (IOrderManager orderManager) : BaseApiController
     }
     
     [HttpGet("{orderId:long}")]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<OrderDto>> GetOrder(long orderId)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -44,6 +47,7 @@ public class OrdersController (IOrderManager orderManager) : BaseApiController
     }
 
     [HttpPost]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult<OrderDto>> CreateOrder(OrderDto orderDto)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -67,6 +71,7 @@ public class OrdersController (IOrderManager orderManager) : BaseApiController
     }
 
     [HttpPut("{orderId}/setStatus/{newStatus}")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult<OrderDto>> SetOrderStatus(long orderId, OrderStatus newStatus)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -80,6 +85,7 @@ public class OrdersController (IOrderManager orderManager) : BaseApiController
     }
 
     [HttpPut("withOrderItem/{orderItemId}/setStatus/{newStatus}")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult<OrderItemDto>> UpdateOrderItemStatusAsync(long orderItemId, OrderItemStatus newStatus)
     {        
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

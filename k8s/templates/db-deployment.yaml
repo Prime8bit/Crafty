@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-db
+  labels:
+    app: {{ .Values.db.app }}
+spec:
+  replicas: 1  
+  strategy:
+    type: Recreate # Databases should use Recreate so they don't go out of sync.
+  selector:
+    matchLabels:
+      app: {{ .Values.db.app }}
+  template:
+    metadata:
+      name: {{ .Release.Name }}-db
+      labels:
+        app: {{ .Values.db.app }} # must match selector.matchLabels
+    spec:
+      containers:
+        - name: crafty-db
+          image: postgres:18
+          envFrom:
+            - secretRef: 
+                name: {{ .Values.db.secretName }}
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: db-init-data
+              mountPath: /docker-entrypoint-initdb.d/init.sql
+              subPath: init.sql
+              readOnly: true
+
+              {{- if .Values.db.enablePersistence }}
+            - name: db-data
+              mountpath: /var/lib/postgresql/data
+              {{- end }}
+      volumes:
+        - name: db-init-data
+          configMap:
+            name: {{ .Release.Name }}-{{ .Values.db.configMapName }}
+          {{- if .Values.db.enablePersistence }}
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.db.volumeName }}
+          {{- end }}
+
+
+

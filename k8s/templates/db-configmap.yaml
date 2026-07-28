@@ -1,0 +1,11 @@
+# This is needed because in a multi-node environment, the sql dump must be available to all nodes.
+# you could make it a volume on all nodes, but then any nodes NOT running a database would waste space
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-{{ .Values.db.configMapName }}
+  labels:
+    app: {{ .Values.db.app }}
+data:
+  init.sql: |-
+  {{ .Files.Get "files/DbBackup.sql" | nindent 4 }}

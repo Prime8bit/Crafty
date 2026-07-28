@@ -2,7 +2,7 @@ import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { Craft } from '../models/craft';
-import { PaginatedResult } from '../models/pagination';
+import { PaginatedList } from '../models/pagination';
 import { CraftListParams } from '../models/craft-list-params';
 import { map, Observable, of, tap } from 'rxjs';
 import { PaginationParams } from '../models/pagination-params';
@@ -13,10 +13,11 @@ import { PaginationParams } from '../models/pagination-params';
 
 export class CraftService {
     private http = inject(HttpClient);
+    private craftListCache = new Map<string, HttpResponse<Craft[]>>();
+    private craftCache = new Map<string, Craft>();
+
     baseUrl = environment.apiUrl;
-    paginatedResult = signal<PaginatedResult<Craft[]>>(new PaginatedResult<Craft[]>());
-    craftListCache = new Map<string, HttpResponse<Craft[]>>();
-    craftCache = new Map<string, Craft>();
+    paginatedResult = signal<PaginatedList<Craft>>(new PaginatedList<Craft>());
     craftListParams = signal<CraftListParams>(new CraftListParams());
 
     resetCraftListParams(): void {
@@ -81,7 +82,7 @@ export class CraftService {
         return this.http.put<Craft>(`${this.baseUrl}crafts/${id}/appropriate`, {});
     }
 
-    getInappropriateCrafts(paginationParams: PaginationParams): Observable<PaginatedResult<Craft[]>> {
+    getInappropriateCrafts(paginationParams: PaginationParams): Observable<PaginatedList<Craft>> {
         let params = new HttpParams();
         if (paginationParams.pageNumber && paginationParams.pageSize) {
             params = params.append("pageNumber", paginationParams.pageNumber);
@@ -93,7 +94,7 @@ export class CraftService {
                 return {
                     items: response.body as Craft[], 
                     pagination: JSON.parse(response.headers.get('Pagination')!)
-                } as PaginatedResult<Craft[]>;
+                } as PaginatedList<Craft>;
             })
         );
     }

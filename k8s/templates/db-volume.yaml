@@ -1,0 +1,14 @@
+# Feel free to comment this out if you don't want the database to be persisted between restarts
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.db.volumeName }}
+  labels:
+    app: {{ .Values.db.app }}
+spec:
+  storageClassName: local-path # When migrating to AWS, this must change.
+  accessModes:
+    - ReadWriteOnce # Can only be opened for read/write by one node.
+  resources:
+    requests:
+      storage: 100Gi

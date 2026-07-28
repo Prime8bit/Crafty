@@ -1,7 +1,7 @@
 using API.Data.Configuration;
 using API.Entities;
 using API.Misc;
-using API.Pagination;
+using CraftyCommon.Pagination;
 using CraftyCommon.DTOs;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
@@ -154,7 +154,7 @@ public class OrderManager (
 
                 var newOrder = new Order()
                 {
-                    OrderDate = DateOnly.FromDateTime(DateTime.Now),
+                    OrderDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     ShippingName = orderDto.ShippingName == "" && user.FullName != null ? user.FullName : orderDto.ShippingName,
                     ShippingAddress = orderDto.ShippingAddress == "" && user.Address != null ? user.Address : orderDto.ShippingAddress,
                     BillingName = orderDto.BillingName == "" && user.FullName != null ? user.FullName : orderDto.BillingName,

@@ -1,5 +1,5 @@
 using System.Text.Json;
-using API.Pagination;
+using CraftyCommon.Pagination;
 
 namespace API.Extensions;
 

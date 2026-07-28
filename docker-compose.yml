@@ -1,18 +1,54 @@
 services:
-  frontend:
+  crafty-nginx:
+    container_name: crafty-nginx
+    image: nginx:1.31.3
+    profiles: ["production"]
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    depends_on:
+      - crafty-backend
+      - crafty-frontend
+      
+
+  crafty-frontend:
+    container_name: crafty-frontend
+    image: crafty-frontend:latest
+    profiles: ["production"]
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    container_name: crafty-frontend
     ports:
-      - "4200:4200"
+      - "4200:80"
     restart: unless-stopped
+    depends_on:
+      - crafty-backend
   
-  backend:
+  crafty-backend:
+    container_name: crafty-backend
+    image: crafty-backend:latest
+    profiles: ["production"]
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: crafty-backend
     ports:
       - "5000:5000"
     restart: unless-stopped
+    depends_on:
+      - crafty-db
+  
+  crafty-db:
+    container_name: crafty-db
+    image: postgres:18
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: crafty
+      POSTGRES_USER: prime8bit
+      POSTGRES_PASSWORD: password
+    volumes:
+      # uncomment this if you want a persistent database, for this portfolio piece. I want the database to reset on each boot.
+      # - ./dbData:/var/lib/postgresql/data
+      - ./API/DbBackup.sql:/docker-entrypoint-initdb.d/init.sql:ro

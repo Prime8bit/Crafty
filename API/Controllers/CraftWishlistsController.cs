@@ -1,10 +1,11 @@
 using System.Security.Claims;
 using API.Data;
 using API.Extensions;
-using API.Pagination;
+using CraftyCommon.Pagination;
 using CraftyCommon.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace API.Controllers;
 
@@ -14,6 +15,7 @@ public class CraftWishlistsController (
     ) : BaseApiController
 {
     [HttpGet]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<PagedList<CraftDto>>> GetWishList([FromQuery]CraftListParams craftListParams)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -34,6 +36,7 @@ public class CraftWishlistsController (
     }
 
     [HttpPost("{targetCraftId:long}")]
+    [EnableRateLimiting(RateLimiters.UserWrite)]
     public async Task<ActionResult> ToggleWishlist (long targetCraftId)
     {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -49,6 +52,7 @@ public class CraftWishlistsController (
     }
 
     [HttpGet("ids")]
+    [EnableRateLimiting(RateLimiters.UserRead)]
     public async Task<ActionResult<List<long>>> GetCurrentWishlistIds()
     {
         

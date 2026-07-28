@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-backend
+  labels:
+    app: {{ .Values.backend.app }}
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.app }}
+  template:
+    metadata:
+      name: {{ .Release.Name }}-backend
+      labels: 
+        app: {{ .Values.backend.app }}
+    spec:
+      {{- if eq .Values.mode "release" }}
+      {{- if .Values.backend.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.backend.pullSecret }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: backend
+          image: {{ .Values.backend.image }}
+          {{- if eq .Values.mode "release" }}
+          imagePullPolicy: IfNotPresent
+          {{- else }}
+          imagePullPolicy: Never # build image manually when in dev mode
+          {{- end}}
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://0.0.0.0:{{ .Values.backend.port }}"
+            - name: ConnectionStrings__DefaultConnection
+              value: "Host={{ .Release.Name }}-db;Port=5432;Database=crafty;Username=prime8bit;Password=password"
+          ports:
+            - containerPort: {{ .Values.backend.port }}
+            

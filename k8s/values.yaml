@@ -1,0 +1,14 @@
+mode: "dev"
+frontend:
+  app: frontend
+  port: 80
+backend:
+  app: backend
+  port: 5000
+db:
+  app: db
+  secretName: db-secret
+  volumeName: db-volume
+  configMapName: db-config-map
+  enablePersistence: false
+  port: 5432

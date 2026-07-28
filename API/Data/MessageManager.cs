@@ -1,7 +1,7 @@
 using API.Data.Configuration;
 using API.Entities;
 using API.Misc;
-using API.Pagination;
+using CraftyCommon.Pagination;
 using CraftyCommon.DTOs;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
@@ -87,7 +87,9 @@ public class MessageManager(DataContext context, UserManager<User> userManager) 
 
     public async Task<ManagerResponse<MessageDto>> AddMessage(long userId, CreateMessageDto messageDto)
     {        
-        var sender = await userManager.FindByIdAsync(userId.ToString());
+        var sender = await userManager.Users
+            .Include(user => user.ProfileImage)
+            .FirstOrDefaultAsync(user => user.Id == userId);
         var recipient = await userManager.FindByIdAsync(messageDto.RecipientId.ToString());
 
         if (sender == null)
@@ -132,7 +134,7 @@ public class MessageManager(DataContext context, UserManager<User> userManager) 
             RecipientId = recipient.Id,
             Recipient = recipient,
             Content = messageDto.Content,
-            DateSent = DateTime.Now,
+            DateSent = DateTime.UtcNow,
             DateRead = messageDto.IsRead ? DateTime.UtcNow : null
         };
 
