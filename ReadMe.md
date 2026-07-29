@@ -71,8 +71,8 @@ Regardles of whether you run from docker or locally, you will need to set up the
 ## Running from docker
 This is the easiest way to simply run this application. You will need to install docker and follow the instructions for setting up the environment for this to work.
 All you should need to do is run:
-    docker compose --profile proudction build --no-cache
-    docker compose --profile production up
+    docker compose --profile production build --no-cache --pull
+    docker compose --profile production up --force-recreate
 A sample database is already provided so you can login as "zamora" with password "password" for a normal user or "nate" with password "password" for an admin.
 
 ## Running the code manually
@@ -106,7 +106,7 @@ Navigate to http://localhost:4200
 
 ### Back-end
 - In Terminal 1, run:
-    - docker compose build --no-cache 
+    - docker compose build
         - This forces a rebuild of all containers with the latest code from the repository
     - docker compose up
         - This will boot up a postgresql server and insert some test data.
