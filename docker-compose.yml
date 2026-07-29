@@ -35,6 +35,18 @@ services:
     ports:
       - "5000:5000"
     restart: unless-stopped
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+      JWT_TOKEN_KEY: ${JWT_TOKEN_KEY}
+
+      CloudinarySettings__CloudName: ${CloudinarySettings__CloudName}
+      CloudinarySettings__ApiKey: ${CloudinarySettings__ApiKey}
+      CloudinarySettings__ApiSecret: ${CloudinarySettings__ApiSecret}
     depends_on:
       - crafty-db
   
@@ -42,12 +54,12 @@ services:
     container_name: crafty-db
     image: postgres:18
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     restart: unless-stopped
     environment:
-      POSTGRES_DB: crafty
-      POSTGRES_USER: prime8bit
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       # uncomment this if you want a persistent database, for this portfolio piece. I want the database to reset on each boot.
       # - ./dbData:/var/lib/postgresql/data

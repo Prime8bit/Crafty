@@ -18,15 +18,22 @@ public static class ApplicationServiceExtensions
         var mapsterConfig = TypeAdapterConfig.GlobalSettings;
         mapsterConfig.Scan(typeof(Program).Assembly);
 
+        var dbHost = config["POSTGRES_HOST"];
+        var dbPort = config["POSTGRES_PORT"];
+        var dbName = config["POSTGRES_DB"];
+        var dbUsername = config["POSTGRES_USER"];
+        var dbPassword = config["POSTGRES_PASSWORD"];
+        var dbConnectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUsername};Password={dbPassword}";
+        services.AddDbContext<DataContext>(options => options.UseNpgsql(dbConnectionString));
+        
+        services.Configure<CloudinarySettings>(config.GetSection("CloudinarySettings"));
+
         services.AddControllers();
-        services.AddDbContext<DataContext>(options =>
-            options.UseNpgsql(config.GetConnectionString("DefaultConnection")));
         services.AddCors();        
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICraftyUserManager, CraftyUserManager>();
         services.AddScoped<ICraftManager, CraftManager>();
         services.AddScoped<ICloudMediaService, CloudMediaService>();
-        services.Configure<CloudinarySettings>(config.GetSection("CloudinarySettings"));
         services.AddScoped<ICraftWishlistManager, CraftWishlistManager>();
         services.AddScoped<IOrderManager, OrderManager>();
         services.AddScoped<IAccountManager, AccountManager>();

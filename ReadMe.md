@@ -57,29 +57,35 @@ I would use Kafka as a message queue between the SignalR service and the NoSQL d
 This project uses a submodule I created called CraftyCommon which you can see among my repositories. Ensure that submodules are downloaded and current when using this repository.
 
 # How to run
-The short version is that you can't without making some minor changes to the code. My application uses Cloudinary as a CDN for user-uploaded media files. Naturally I don't want people to use my code to upload inappropriate media to my cloudinary account so I have replaced my credentials with invalid ones. You can still run the application, but you will need to follow these steps:
+The short version is that you can't without making some minor changes to the code. My application uses Cloudinary as a CDN for user-uploaded media files. Naturally I don't want people to use my code to upload inappropriate media to my cloudinary account so I have replaced my credentials with invalid ones. You can still run the application, but you will need to follow the steps below
+
+## Setting up the environment
+Regardles of whether you run from docker or locally, you will need to set up the environment.
+- Copy /.env_sample to /.env
 - Create a cloudinary account (there are free accounts with limits, but this is what I use for development)
 - Create an API key
 - If not already there, Navigate to your cloudinary dashboard and open your cloudinary keys page.
-- Open API/appsettings.json file and enter in the following data:
-    - "CloudName": "The Cloud Name At The Top Left Product Environments Dropdown",
-    - "ApiKey": "Your API key",
-    - "ApiSecret": "Your API secret"
+- Update your .env file with all your cloudinary and database values
+    - If you are wondering about the JWT_TOKEN_KEY, it is only used for hashing passwords and can be any string you wish, but you must restart your asp.net application for changes to take effect.
 
-## Running from docker.
-This is the recommended way to run this application in a short amount of time, but I have a disclaimer. For reasons I do not yet understand, when the application is run from docker containers, using firefox to view the client causes all requests to the backend to return 500 server error responses. I have tested this application with chrome and edge and those seem to work just fine. To run this application just use the following from a terminal:
-
-```
-docker compose up
-```
-
-Once it is up and running you should be able to use the app from chrome or edge using the url `http://localhost:4200`
-I recommend you login with the credentials:
-Username: zamora
-Password: password
+## Running from docker
+This is the easiest way to simply run this application. You will need to install docker and follow the instructions for setting up the environment for this to work.
+All you should need to do is run "docker compose --profile production up"
+A sample database is already provided so you can login as "zamora" with password "password" for a normal user or "nate" with password "password" for an admin.
 
 ## Running the code manually
 You will need three terminals to run this code unless you want to run them with background processes. I recommend three sessions so you can see the output of each server separately.
+
+### Dev environment setup
+A few additional steps need to be taken to run the code manually for the ASP.NET application
+- Copy API/appsettings.json to API/appsettings.Development.json. It has already been added to .gitignore so it should be safe to check in without exposing your keys. It is always good to double check.
+- Open API/appsettings.Development.json file and enter in the following data:
+    - "CloudinarySettings.CloudName": "The Cloud Name At The Top Left Product Environments Dropdown",
+    - "CloudinarySettings.ApiKey": "Your cloudinary API key",
+    - "CloudinarySettings.ApiSecret": "Your cloudinary API secret"
+    - The JWT_TOKEN_KEY can be anything you want
+    - "POSTGRES_HOST": "localhost" You specifically want to override this for local development so you can run the backend from your IDE and have it communicate with your database.
+    - Everything else can derive from appsettings.json. If you want to change the port, username, or password you must do so in .env so the database and ASP.NET application match.
 
 ### Dependencies
 - .NET SDK 9.0
@@ -90,12 +96,11 @@ You will need three terminals to run this code unless you want to run them with 
 - It is helpful to add dotnet and npm to your PATH in Windows. In Linux, this is usually already handled for you.
 - There are numerous third party libraries used by this repository, but they are all installed using npm for the front-end and nuget for the backend using standard npm and nuget repositories.
 
-
 ### Front-end
 - cd client
 - npm install
 - ng serve
-Navigate to http://{ip address}:4200
+Navigate to http://localhost:4200
 
 ### Back-end
 - In Terminal 1, run "docker compose up" the rest should be in a second terminal
@@ -107,8 +112,6 @@ Navigate to http://{ip address}:4200
 
 All accounts use "password" as their password. I recommend you use "zamora" for a regular user and "nate" for a user with an administrator role.
 
-The TestDataTemplate in the server application is used with json-generator.com to generate seed data. It was used during early development, but doesn't work now due to numerous changes to the code. It is in my todo list below to update this. Until then, just use the sqlite database included in this repository.
-
 ## Ideas for 2.0+:
 - Currently, the update craft page has a huge flaw - it is possible to delete images then "cancel" the update. 
     - This should be prevented as it will cause the images to fail to load and because they have been deleted already, trying to delete them again will fail.
@@ -119,15 +122,10 @@ The TestDataTemplate in the server application is used with json-generator.com t
 - Convert the craftSort option into an enum in wishlistscomponent and craftlistscomponent.
 - Implement separate billing and shipping addresses.
 - Create a curated list of categories for crafts and allow users to assign categories to their crafts. This has the potential to be abused if a person puts all categories on their products so I would need to somehow prevent that.
-- Create the ability to leave craft reviews. This would be a good example of when using a nosql database would be helpful.
+- Create the ability to leave craft reviews.
 - Create a CDN abstraction layer so switching to a different CDN can be as painless as possible. 
-- Sqlite doesn't store UTC dates well. I might want to fix that manually. This probably insn't improtant for a portfolio piece. If I were to do this project again I wouldn't use sqlite at all. It was a recommendation from the angular/asp.net course I took that in hindsight was a bad idea. Migrating to another database engine may involve numerous refactors to my code and will definitely require a custom migration script. 
 - My client currently passes the raw password when registering for a new account. This is a major security flaw and should be hashed before being sent, even when using https.
-- Update seed data json. Now that the app has the ability to create all entities from the front-end, there isn't much need for seed-data.
-- Deploy my app using mariadb instead of sqlite. 
-    - I chose not to do this because I want people to be able to run my application quickly. If I used mariadb, then I would need to create a custom mariadb container with my database, or create a script that imports a database export on startup if the tables don't exist. Using sqlite I can just bundle my database with the code and you can run.
-    - Obfuscate my javascript code during deployment so it is harder to reverse engineer in production.
-    - Figure out why running in docker containers causes 500 server errors from all request from Firefox to the backend container on the same machine. Chrome/edge are fine.
+- Delete seed data json. Now that the app has the ability to create all entities from the front-end and I have included a sample database, there isn't much need for seed-data.
 
 # Common Questions
 ## Why this app

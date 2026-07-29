@@ -9,6 +9,7 @@ API/Crafty.postman_collection.json
 API/appsettings.Development.json
 API/Models
 publish
+.env
 
 # Node
 client/node_modules

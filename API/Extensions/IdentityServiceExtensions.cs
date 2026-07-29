@@ -34,7 +34,7 @@ public static class IdentityServiceExtensions
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
-                var tokenKey = config["TokenKey"] ?? throw new Exception("TokenKey is missing from configuration.");
+                var tokenKey = config["JWT_TOKEN_KEY"] ?? throw new Exception("JWT_TOKEN_KEY is missing from configuration.");
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     // Unless you want any key to be accepted, set this to true

@@ -13,10 +13,10 @@ public class TokenService (IConfiguration config, UserManager<User> userManager)
     // Creates a JWT token that will be used to authorize requests.
     public async Task<string> CreateToken(User user)
     {
-        var tokenKey = config["TokenKey"] ?? throw new ArgumentNullException("TokenKey is missing from appsettings.json.");
+        var tokenKey = config["JWT_TOKEN_KEY"] ?? throw new ArgumentNullException("JWT_TOKEN_KEY is missing from appsettings.json.");
         if (tokenKey.Length < 64)
         {
-            throw new ArgumentException("TokenKey must be at least 64 characters long.");
+            throw new ArgumentException("JWT_TOKEN_KEY must be at least 64 characters long.");
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey));
