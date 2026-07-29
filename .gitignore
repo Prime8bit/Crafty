@@ -6,6 +6,7 @@ Notes.txt
 API/bin
 API/obj
 API/Crafty.postman_collection.json
+API/appsettings.Development.json
 API/Models
 publish
 
