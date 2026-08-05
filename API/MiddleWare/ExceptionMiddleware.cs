@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace API.MiddleWare;
 
@@ -16,11 +18,17 @@ public class ExceptionMiddleware(
     ILogger<ExceptionMiddleware> logger, 
     IHostEnvironment env)
 {
+    
     public async Task InvokeAsync(HttpContext context)
-    {
+    {        
         try
         {
+            // I am going to restart the entire docker container every day, otherwise I would set up
+            // rolling log files.
+            var stopwatch = Stopwatch.StartNew(); 
+            logger.LogInformation($"Request received: {context.Request.Method} {context.Request.Path}");
             await next(context);
+            logger.LogInformation($"Request completed: {context.Request.Method} {context.Request.Path} {context.Response.StatusCode} {stopwatch.ElapsedMilliseconds}");
         }
         catch (Exception ex)
         {
