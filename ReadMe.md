@@ -1,6 +1,6 @@
 # Crafty Web app
 This is an example of a simple e-commerce store that resembles Etsy.
-This is meant to be a portfolio piece for demonstrating my knowledge in C#, ASP.NET, and Angular so it is open for issues but closed for pull requests. This repository includes two projects:
+This is meant to be a portfolio piece so it is open for issues but closed for pull requests. This repository includes two projects:
 - A C#/ASP.NET/Entity Framework backend.
 - An Angular/Typescript frontend.
 
@@ -17,18 +17,19 @@ The original design for this application is deliberately simple. Because this is
         webClient --> server(fa:fa-server Server)
             server --> db(fa:fa-database Database)
             server --> cdn(fa:fa-database CDN)
+            server --> redis(fa:fa-database Redis)
 
 </details>
 
-[![Portable Design](https://mermaid.ink/img/pako:eNptkbtuwzAMRX9F4NQATmDJ8ktDl2RsO7RDgcKLbNEPwJYMRW7aGvn3-tUOQbiQlzj3cuAIhVEIAsrWXIpaWkeeXjNNprpgfmwb1O6hlKKU-1b2zvTkHfNdpm8Qst8_kjPaT7QbvQrytrTdis-17Wde5RurpJO5PCM5bcN9vlD61nA8vezAg8o2CoSzA3rQoe3kLGGcUzJwNXaYgZjGtqlql0Gmr5Opl_rDmO7PZ81Q1TClt-dJDf10A0-NrKzs_rcWtUJ7NIN2IELO6JICYoQvEIxGh5T7gR9HNKZJHHrwvW6TwE849SPOw4Cyqwc_y13_EPGQsYjFjCc09WnqAarGGfu8_mR5zfUXuKKA3Q?type=png)](https://mermaid.ai/live/edit#pako:eNptkbtuwzAMRX9F4NQATmDJ8ktDl2RsO7RDgcKLbNEPwJYMRW7aGvn3-tUOQbiQlzj3cuAIhVEIAsrWXIpaWkeeXjNNprpgfmwb1O6hlKKU-1b2zvTkHfNdpm8Qst8_kjPaT7QbvQrytrTdis-17Wde5RurpJO5PCM5bcN9vlD61nA8vezAg8o2CoSzA3rQoe3kLGGcUzJwNXaYgZjGtqlql0Gmr5Opl_rDmO7PZ81Q1TClt-dJDf10A0-NrKzs_rcWtUJ7NIN2IELO6JICYoQvEIxGh5T7gR9HNKZJHHrwvW6TwE849SPOw4Cyqwc_y13_EPGQsYjFjCc09WnqAarGGfu8_mR5zfUXuKKA3Q)
+[![Portable Design](https://mermaid.ink/img/pako:eNptkbtuwzAMRX9F4NQATuC3Ig1ZkrHtkA4FCi-yRT8AWzJkuWkb5N8rP9ohCBfxEudeQuAVCi0ROJStvhS1MJY8nzNFXF0wP7YNKvtUCl6KbSt6q3vyjvkmU3cI2W4PZEDziWalF0He5mez4FOt84mX-cpKYUUuBiSntXnMF1LdG46n18esQdkM9_R5Gm7Ag8o0Erg1I3rQoenEJOE6JWVga-wwA-7atqlqm0Gmbs7UC_WhdffnM3qsanD57eDU2LsteGpEZUT3PzWoJJqjHpUFHgZzBvArfAGP0mAXMeqzmIZpkoaJB9_AY7ZL9zTxaRqyiMVJdPPgZ17q7_Y0Zq4oCxIaBNSlue9YbV6WA853vP0CK9CPZQ?type=png)](https://mermaid.ai/live/edit#pako:eNptkbtuwzAMRX9F4NQATuC3Ig1ZkrHtkA4FCi-yRT8AWzJkuWkb5N8rP9ohCBfxEudeQuAVCi0ROJStvhS1MJY8nzNFXF0wP7YNKvtUCl6KbSt6q3vyjvkmU3cI2W4PZEDziWalF0He5mez4FOt84mX-cpKYUUuBiSntXnMF1LdG46n18esQdkM9_R5Gm7Ag8o0Erg1I3rQoenEJOE6JWVga-wwA-7atqlqm0Gmbs7UC_WhdffnM3qsanD57eDU2LsteGpEZUT3PzWoJJqjHpUFHgZzBvArfAGP0mAXMeqzmIZpkoaJB9_AY7ZL9zTxaRqyiMVJdPPgZ17q7_Y0Zq4oCxIaBNSlue9YbV6WA853vP0CK9CPZQ)
 
 
 ## Design for scale
 If I were to change this application to design for scale this is the design I would propose. Since this does process purchases, I would prioritize consistency over availability. If the system were to become partitioned, then the partitioned services would simply shut down, routing all their traffic to the remaining services that are connected to the master system. I considered breaking this apart further so that browsing and searching of crafts used a high availability service while the orders used a separate high consistency service, but I think it is too early for that level of optimization. This seemed like a good place to start.
 
-I would split the web service into multiple microservices. At the very least I would have an authentication service, a chat service, and one service for the rest of the site. Authentication is needed for both chat and the rest of the site, so I would break it out so that if one of these two goes down, the other can still operate. 
-I would use Redis as a memcache for the database queries to improve response times and reduce load on the servers. I would use continue to use SQL for most web services because there are a lot of relationships between various entity types that cannot be migrated well to NoSQL and I want the ACID safety that SQL provides for purchase information. I would use NoSQL for chat because it doesn't have complex relationships, so ACID can still be maintained with few tweaks to the schema, if any. Because there are likely to be many chat messages in a small amount of time, horizontal scaling is a higher priority than with other services. 
-I would use Kafka as a message queue between the SignalR service and the NoSQL databases for a few reasons. First, I don't lose messages if the database goes down for maintenance. Second is it creates redundancy. If the message queue goes down I can still write direct to database. If the database goes down I can still write messages to the queue, but they won't be delivered until the database comes back up. 
+I would split the web service into multiple microservices. At the very least I would have an authentication service, a chat service, and one service for the rest of the site. Authentication is needed for both chat and the rest of the site. I would break it out so that if one of these two goes down, the other can still operate. 
+I would continue to use SQL for most web services because there are a lot of relationships between various entity types that cannot be migrated well to NoSQL and I want the ACID safety that SQL provides for purchase information. I would use NoSQL for chat because it doesn't have complex relationships, so ACID can still be maintained with few tweaks to the schema, if any. Because there are likely to be many chat messages in a small amount of time, horizontal scaling is a higher priority than with other services. 
+I would use Kafka as a message queue between the SignalR service and the NoSQL databases for a few reasons. First, is it creates redundancy. If the message queue goes down I can still write direct to database. If the database goes down I can still write messages to the queue, but they won't be delivered until the database comes back up. The second reason I would use a queue is to help reduce the load on the database. Scaling kafka queues horizontally as traffic increases is much easier than scaling databases.
 
 <!-- I can't use a comment here because mermaid code contains the end comment sequence -->
 <details>
@@ -70,10 +71,9 @@ Regardles of whether you run from docker or locally, you will need to set up the
 
 ## Running from docker
 This is the easiest way to simply run this application. You will need to install docker and follow the instructions for setting up the environment for this to work.
-All you should need to do is run:
-    docker compose --profile production build --no-cache --pull
-    docker compose --profile production up --force-recreate
-A sample database is already provided so you can login as "zamora" with password "password" for a normal user or "nate" with password "password" for an admin.
+All you should need to do is to setup your environment as instructed above and run:
+    docker compose --profile production up --build
+A sample database is already provided so you can login as "zamora" with password "password" for a normal user. You may also create a new account. If you wish to test admin functions, then you must change your RoleId in the AspNetUserRoles to "2". The frontend does not provide a way to do this.
 
 ## Running the code manually
 You will need three terminals to run this code unless you want to run them with background processes. I recommend three sessions so you can see the output of each server separately.
@@ -81,13 +81,7 @@ You will need three terminals to run this code unless you want to run them with 
 ### Dev environment setup
 A few additional steps need to be taken to run the code manually for the ASP.NET application
 - Copy API/appsettings.json to API/appsettings.Development.json. It has already been added to .gitignore so it should be safe to check in without exposing your keys. It is always good to double check.
-- Open API/appsettings.Development.json file and enter in the following data:
-    - "CloudinarySettings.CloudName": "The Cloud Name At The Top Left Product Environments Dropdown",
-    - "CloudinarySettings.ApiKey": "Your cloudinary API key",
-    - "CloudinarySettings.ApiSecret": "Your cloudinary API secret"
-    - The JWT_TOKEN_KEY can be anything you want
-    - "POSTGRES_HOST": "localhost" You specifically want to override this for local development so you can run the backend from your IDE and have it communicate with your database.
-    - Everything else can derive from appsettings.json. If you want to change the port, username, or password you must do so in .env so the database and ASP.NET application match.
+- Open API/appsettings.Development.json file and replace all values with "sample" in the value with your values.
 
 ### Dependencies
 - .NET SDK 9.0
@@ -106,16 +100,15 @@ Navigate to http://localhost:4200
 
 ### Back-end
 - In Terminal 1, run:
-    - docker compose build
+    - docker compose up --build
         - This forces a rebuild of all containers with the latest code from the repository
-    - docker compose up
-        - This will boot up a postgresql server and insert some test data.
+        - This will boot up a redis server, boot up a postgresql server and insert some test data into the database.
 - cd API 
 - dotnet run
     - If you get CORS errors between client and server, but postman works, then it is likely that the trusted self-signed certificate expired. This is used for testing https communication.
     - Run "dotnet dev-certs https --trust" then restart your browser. That should temporarily trust the self-signed certificate this app uses.
 
-All accounts use "password" as their password. I recommend you use "zamora" for a regular user and "nate" for a user with an administrator role.
+All accounts use "password" as their password. I recommend you use "zamora" for a regular user. There are no admin users by default.
 
 ## Ideas for 2.0+:
 - Currently, the update craft page has a huge flaw - it is possible to delete images then "cancel" the update. 
@@ -135,6 +128,3 @@ All accounts use "password" as their password. I recommend you use "zamora" for 
 # Common Questions
 ## Why this app
 I wanted to create something that was familiar but not as commonly asked in interviews as "Create youtube" so I chose "Create Etsy." Unfortunately, part way through implementing this I realized that "Create Etsy" is no diffent than "Create an e-commerce store", but I was already in too deep so I stuck with it.
-
-## Why not host this yourself for easier viewing
-I am not a cybersecurity expert. I don't want to have to spend the time that is necessary to prevent problems like a bot using my frontend to automate creating crafts with inappropriate pictures, videos or 3d models. I want to ensure that when I run my app on my laptop, that my sample data is the only thing
