@@ -6,29 +6,56 @@ using CraftyCommon.DTOs;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
+using API.CacheKey;
 
 namespace API.Data;
 
 public class CraftManager(
     DataContext context, 
     ICraftyUserManager craftyUserManager,
-    UserManager<User> userManager
+    UserManager<User> userManager,
+    ICacheService cacheService
     ) : ICraftManager
 {
+
     public async Task<CraftDto?> GetCraftAsync(long id)
     {
+        var cacheKey = GetCraftCacheKey(id);
+        var cached = await cacheService.GetAsync<CraftDto>(cacheKey);
+
+        if (cached != null)
+        {
+            return cached;
+        }
+
         // I optimized the query for only the information needed in each query
-        return await context.Crafts
+        var result = await context.Crafts
             .Include(craft => craft.Seller)
             .Include(craft => craft.SearchImage)
             .Include(craft => craft.Medias)
             .Where(craft => craft.Id == id)
             .ProjectToType<CraftDto>()
             .SingleOrDefaultAsync();
+
+        if (result != null)
+        {
+            await cacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(30));
+        }
+
+        return result;
     }
 
     public async Task<PagedList<CraftDto>> GetCraftsAsync(CraftListParams craftListParams)
     {
+        var cacheKey = $"crafts:{CacheKeySerializer.Serialize(craftListParams)}";
+        var cached = await cacheService.GetAsync<PagedList<CraftDto>>(cacheKey);
+
+        if (cached != null)
+        {
+            return cached;
+        }
+
         // Remember that filtering with .Where must be done before joining with .Include.Select. ASP.NET is picky like that.
         var query = context.Crafts
             .Include( craft => craft.Seller)
@@ -69,7 +96,13 @@ public class CraftManager(
                 IsArchived = craft.IsArchived
                 // I intentionally leave out the Media collection here since the list endpoint doesn't need it, and it would be a waste of resources to include it.            
             });
-        return await PagedList<CraftDto>.CreateAsync(resultQuery, craftListParams.PageNumber, craftListParams.PageSize);
+
+        var result = await PagedList<CraftDto>.CreateAsync(resultQuery, craftListParams.PageNumber, craftListParams.PageSize);
+
+        // The crafts page changes often just cache it for 30 seconds.
+        await cacheService.SetAsync(cacheKey, result, TimeSpan.FromSeconds(30));
+
+        return result;
     }
 
     public async Task<ManagerResponse<CraftDto>> CreateCraftAsync(CraftDto craftDto)
@@ -275,6 +308,8 @@ public class CraftManager(
             };
         }
 
+        await cacheService.RemoveAsync(GetCraftCacheKey(craftDto.Id));
+
         return new ManagerResponse<CraftDto>(craftDto);
     }
     
@@ -323,6 +358,8 @@ public class CraftManager(
                 ErrorMessages = [$"Unable to archive craft with id {craft.Id}"]
             };
         }
+
+        await cacheService.RemoveAsync(GetCraftCacheKey(craftId));
 
         return new ManagerResponse<CraftDto>(craft.Adapt<CraftDto>());
     }
@@ -373,6 +410,8 @@ public class CraftManager(
             };
         }
 
+        await cacheService.RemoveAsync(GetCraftCacheKey(craftId));
+
         return new ManagerResponse<CraftDto>(craft.Adapt<CraftDto>());
     }
 
@@ -402,6 +441,8 @@ public class CraftManager(
             };
         }
 
+        await cacheService.RemoveAsync(GetCraftCacheKey(craftId));
+
         return new ManagerResponse<CraftDto>(craft.Adapt<CraftDto>());
     }
 
@@ -423,6 +464,13 @@ public class CraftManager(
                 // I intentionally leave out the Media collection here since the list endpoint doesn't need it, and it would be a waste of resources to include it.            
             });
 
+        // No caching needed, this request is too seldom requested.
+
         return await PagedList<CraftDto>.CreateAsync(resultQuery, paginationParams.PageNumber, paginationParams.PageSize);
+    }
+
+    private string GetCraftCacheKey(long craftId)
+    {
+        return $"craft:{craftId}";
     }
 }

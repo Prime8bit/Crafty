@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Craft } from '../models/craft';
-import { PaginatedList } from '../models/pagination';
+import { PagedList } from '../models/paged-list';
 import { CraftListParams } from '../models/craft-list-params';
 import { Observable, Subscription } from 'rxjs';
 
@@ -14,7 +14,7 @@ export class WishlistService {
     private http = inject(HttpClient)
 
     baseUrl = environment.apiUrl;
-    paginatedResult = signal<PaginatedList<Craft>>(new PaginatedList<Craft>());
+    paginatedResult = signal<PagedList<Craft>>(new PagedList<Craft>());
     wishlistIds = signal<number[]>([]);
     craftListParams = signal<CraftListParams>(new CraftListParams());
     
@@ -42,7 +42,7 @@ export class WishlistService {
         params = params.append("orderBy", this.craftListParams().orderBy);
         params = params.append("isOrderDescending", this.craftListParams().isOrderDescending);
 
-        return this.http.get<Craft[]>(`${this.baseUrl}craftwishlists`, {observe: 'response', params}).subscribe({
+        return this.http.get<PagedList<Craft>>(`${this.baseUrl}craftwishlists`, {observe: 'response', params}).subscribe({
             next: response => this.setPaginatedResponse(response)
         });
     }
@@ -53,10 +53,7 @@ export class WishlistService {
         })
     }
 
-    private setPaginatedResponse(response: HttpResponse<Craft[]>): void {
-        this.paginatedResult.set({
-            items: response.body as Craft[], 
-            pagination: JSON.parse(response.headers.get('Pagination')!)
-        })
+    private setPaginatedResponse(response: HttpResponse<PagedList<Craft>>): void {
+        this.paginatedResult.set(response.body as PagedList<Craft>)
     }
 } 

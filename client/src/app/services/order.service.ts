@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { PaginatedList } from '../models/pagination';
+import { PagedList } from '../models/paged-list';
 import { Order, OrderStatus } from '../models/order';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { OrderListParams } from '../models/order-list-params';
@@ -19,7 +19,7 @@ export class OrderService {
 
     baseUrl = environment.apiUrl;
 
-    paginatedResult = signal<PaginatedList<OrderListItem>>(new PaginatedList<OrderListItem>());
+    paginatedResult = signal<PagedList<OrderListItem>>(new PagedList<OrderListItem>());
     orderListParams = signal<OrderListParams>(new OrderListParams());
     // Record should be used instead of Map because Map doesn't play well with Angular's signal change detection
 
@@ -64,7 +64,7 @@ export class OrderService {
         params = params.append("orderBy", this.orderListParams().orderBy);
         params = params.append("isOrderDescending", this.orderListParams().isOrderDescending)
 
-        return this.http.get<OrderListItem[]>(`${this.baseUrl}orders`, {observe: 'response', params}).subscribe({
+        return this.http.get<PagedList<OrderListItem>>(`${this.baseUrl}orders`, {observe: 'response', params}).subscribe({
             next: response => this.setPaginatedResponse(response)
         });
     }
@@ -183,10 +183,7 @@ export class OrderService {
         localStorage.setItem(this.cartKey, JSON.stringify(this.cart()));
     }
 
-    private setPaginatedResponse(response: HttpResponse<OrderListItem[]>): void {
-        this.paginatedResult.set({
-            items: response.body as OrderListItem[], 
-            pagination: JSON.parse(response.headers.get('Pagination')!)
-        })
+    private setPaginatedResponse(response: HttpResponse<PagedList<OrderListItem>>): void {
+        this.paginatedResult.set(response.body as PagedList<OrderListItem>);
     }
 }

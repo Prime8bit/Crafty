@@ -8,7 +8,8 @@ RUN apk add --no-cache git
 WORKDIR /Crafty/Code
 
 # Bake the code and dependencies
-RUN git clone --recurse-submodules https://github.com/Prime8bit/Crafty.git . 
+#RUN git clone --recurse-submodules https://github.com/Prime8bit/Crafty.git . 
+COPY . .
 RUN dotnet restore CraftyApp.sln 
 RUN dotnet publish API/API.csproj -c Release -o /Crafty/publish --no-restore
 

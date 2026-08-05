@@ -27,11 +27,6 @@ public class CraftWishlistsController (
 
         var response = await craftWishlistRepo.GetWishlistedCraftsForUserAsync(userId, craftListParams);
 
-        if (response.Data != null)
-        {
-            Response.AddPaginationHeader(response.Data);
-        }
-
         return GetActionResult(response);
     }
 

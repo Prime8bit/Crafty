@@ -25,6 +25,15 @@ public static class ApplicationServiceExtensions
         var dbPassword = config["POSTGRES_PASSWORD"];
         var dbConnectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUsername};Password={dbPassword}";
         services.AddDbContext<DataContext>(options => options.UseNpgsql(dbConnectionString));
+        services.AddDbContext<DataContext>(options =>
+            options.UseNpgsql(dbConnectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 10,
+                    maxRetryDelay: TimeSpan.FromSeconds(5),
+                    errorCodesToAdd: null);
+            })
+        );
         
         services.Configure<CloudinarySettings>(config.GetSection("CloudinarySettings"));
 
@@ -38,7 +47,16 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IOrderManager, OrderManager>();
         services.AddScoped<IAccountManager, AccountManager>();
         services.AddScoped<IMessageManager, MessageManager>();
+
         services.AddSingleton(mapsterConfig);
+
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = $"{config["REDIS_HOST"]}:{config["REDIS_PORT"]},abortConnect=false,connectRetry=10,connectTimeout=5000";
+            options.InstanceName = "crafty:";
+        });
+
+        services.AddScoped<ICacheService, CacheService>();
 #if DEBUG
         services.AddSignalR(options => options.EnableDetailedErrors = true);
 #else

@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CraftService } from '../../services/craft.service';
 import { PaginationParams } from '../../models/pagination-params';
 import { Craft } from '../../models/craft';
-import { PaginatedList } from '../../models/pagination';
+import { PagedList } from '../../models/paged-list';
 import { PaginationModule } from 'ngx-bootstrap/pagination';
 import { CraftCardComponent } from '../craft-card/craft-card.component';
 import { FormsModule } from '@angular/forms';
@@ -24,11 +24,11 @@ export class InappropriateCraftListComponent {
     // This dictionary is used to map the dropdown values to the property names for the backend.
     craftSortDict: Record<string, string> = {"Name":"name", "Price":"price", "Date":"createdAt"};
     selectedSortOption = "Date";
-    paginatedCrafts: PaginatedList<Craft> = new PaginatedList<Craft>();
+    paginatedCrafts: PagedList<Craft> = new PagedList<Craft>();
     paginationParams: PaginationParams = { pageNumber: 1, pageSize: 5, orderBy : "createdAt", isOrderDescending: false };
 
     ngOnInit(): void {
-        if (this.paginatedCrafts.pagination.totalItems === 0) {
+        if (this.paginatedCrafts.totalCount === 0) {
             this.loadCrafts();
         }
     }

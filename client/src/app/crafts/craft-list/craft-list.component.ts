@@ -26,7 +26,7 @@ export class CraftListComponent implements OnInit{
     selectedSortOption = "Date";
 
     ngOnInit(): void {
-        if (this.craftService.paginatedResult().pagination.totalItems === 0) {
+        if (this.craftService.paginatedResult().totalCount === 0) {
             this.loadCrafts();
         }
     }

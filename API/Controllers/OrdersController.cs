@@ -24,11 +24,6 @@ public class OrdersController (IOrderManager orderManager) : BaseApiController
 
         var orderResponse = await orderManager.GetOrdersAsync(userId, listParams);
 
-        if (orderResponse.Data != null)
-        {
-            Response.AddPaginationHeader(orderResponse.Data);
-        }
-
         return GetActionResult(orderResponse);
     }
     

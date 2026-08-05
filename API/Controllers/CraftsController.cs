@@ -20,7 +20,6 @@ public class CraftsController(
     public async Task<ActionResult<IEnumerable<CraftDto>>> GetCrafts([FromQuery] CraftListParams paginationParams)
     {
         var crafts = await craftManager.GetCraftsAsync(paginationParams);
-        Response.AddPaginationHeader(crafts);
 
         return Ok(crafts);
     }
@@ -130,7 +129,6 @@ public class CraftsController(
     public async Task<ActionResult<PagedList<Craft>>> GetInappropriateCrafts([FromQuery] PaginationParams paginationParams)
     { 
         var craftPagedList = await craftManager.GetInappropriateCraftsAsync(paginationParams);
-        Response.AddPaginationHeader(craftPagedList);
 
         return Ok(craftPagedList);
     }

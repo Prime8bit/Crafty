@@ -1,6 +1,6 @@
 <div class="row">
     <div class="text-center mt-3">
-        <h2>{{craftService.paginatedResult().pagination.totalItems}} Crafts</h2>
+        <h2>{{craftService.paginatedResult().totalCount}} Crafts</h2>
     </div>
 
     <div class="container mt-3 d-flex align-items-start">
@@ -83,14 +83,14 @@
             <app-craft-card [craft]="craft"></app-craft-card>
         </div>
     }
-    @if (craftService.paginatedResult().pagination) {
+    @if (craftService.paginatedResult()) {
         <div class="d-flex justify-content-center">
             <pagination 
             [boundaryLinks]="true" 
-            [totalItems]="craftService.paginatedResult().pagination.totalItems"
-            [itemsPerPage]="craftService.paginatedResult().pagination.itemsPerPage"
+            [totalItems]="craftService.paginatedResult().totalCount"
+            [itemsPerPage]="craftService.paginatedResult().pageSize"
             (pageChanged)="pageChanged($event)"
-            [(ngModel)]="craftService.paginatedResult().pagination.currentPage"
+            [(ngModel)]="craftService.paginatedResult().currentPage"
             [maxSize]="10"
             previousText="&lsaquo;" 
             nextText="&rsaquo;" 

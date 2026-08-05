@@ -46,7 +46,7 @@
     }
 </div>
 
-@if (orderService.paginatedResult().pagination.totalItems === 0) {
+@if (orderService.paginatedResult().totalCount === 0) {
     <h3 class="mt-3">No orders.</h3>
 } @else {
     <table 
@@ -73,14 +73,14 @@
         </tbody>
     </table>
 
-    @if (orderService.paginatedResult().pagination && orderService.paginatedResult().pagination.totalItems > 0) {
+    @if (orderService.paginatedResult() && orderService.paginatedResult().totalCount > 0) {
         <div class="d-flex justify-content-center">
             <pagination 
             [boundaryLinks]="true" 
-            [totalItems]="orderService.paginatedResult().pagination.totalItems"
-            [itemsPerPage]="orderService.paginatedResult().pagination.itemsPerPage"
+            [totalItems]="orderService.paginatedResult().totalCount"
+            [itemsPerPage]="orderService.paginatedResult().pageSize"
             (pageChanged)="pageChanged($event)"
-            [(ngModel)]="orderService.paginatedResult().pagination.currentPage"
+            [(ngModel)]="orderService.paginatedResult().currentPage"
             [maxSize]="20"
             previousText="&lsaquo;" 
             nextText="&rsaquo;" 

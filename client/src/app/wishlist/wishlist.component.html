@@ -1,6 +1,6 @@
 <div class="row">
     <div class="text-center mt-3">
-        <h2>You wishlist contains {{wishlistService.paginatedResult().pagination.totalItems}} crafts</h2>
+        <h2>You wishlist contains {{wishlistService.paginatedResult().totalCount}} crafts</h2>
     </div>
 
 
@@ -85,14 +85,14 @@
             <app-craft-card [craft]="craft"></app-craft-card>
         </div>
     }
-    @if (wishlistService.paginatedResult().pagination.totalItems > 0) {
+    @if (wishlistService.paginatedResult().totalCount > 0) {
         <div class="d-flex justify-content-center">
             <pagination 
             [boundaryLinks]="true" 
-            [totalItems]="wishlistService.paginatedResult().pagination!.totalItems"
-            [itemsPerPage]="wishlistService.paginatedResult().pagination!.itemsPerPage"
+            [totalItems]="wishlistService.paginatedResult().totalCount"
+            [itemsPerPage]="wishlistService.paginatedResult().pageSize"
             (pageChanged)="pageChanged($event)"
-            [(ngModel)]="wishlistService.paginatedResult().pagination!.currentPage"
+            [(ngModel)]="wishlistService.paginatedResult().currentPage"
             [maxSize]="10"
             previousText="&lsaquo;" 
             nextText="&rsaquo;" 

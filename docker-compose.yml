@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
     ports:
-      - "4200:80"
+      - "4200:80" # dev versions of angular run on 4200 by default. Since 80 is already in use by nginx anyway, I may as well follow suit
     restart: unless-stopped
     depends_on:
       - crafty-backend
@@ -36,7 +36,6 @@ services:
       - "5000:5000"
     restart: unless-stopped
     environment:
-      POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -48,12 +47,13 @@ services:
       CloudinarySettings__ApiSecret: ${CloudinarySettings__ApiSecret}
     depends_on:
       - crafty-db
+      - crafty-redis
   
   crafty-db:
     container_name: crafty-db
     image: postgres:18
     ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - "5432:5432"
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -63,3 +63,13 @@ services:
       # uncomment this if you want a persistent database, for this portfolio piece. I want the database to reset on each boot.
       # - ./dbData:/var/lib/postgresql/data
       - ./API/DbBackup.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  crafty-redis:
+    container_name: crafty-redis
+    image: redis:8
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]

@@ -2,7 +2,7 @@ import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { Craft } from '../models/craft';
-import { PaginatedList } from '../models/pagination';
+import { PagedList } from '../models/paged-list';
 import { CraftListParams } from '../models/craft-list-params';
 import { map, Observable, of, tap } from 'rxjs';
 import { PaginationParams } from '../models/pagination-params';
@@ -13,11 +13,11 @@ import { PaginationParams } from '../models/pagination-params';
 
 export class CraftService {
     private http = inject(HttpClient);
-    private craftListCache = new Map<string, HttpResponse<Craft[]>>();
+    private craftListCache = new Map<string, HttpResponse<PagedList<Craft>>>();
     private craftCache = new Map<string, Craft>();
 
     baseUrl = environment.apiUrl;
-    paginatedResult = signal<PaginatedList<Craft>>(new PaginatedList<Craft>());
+    paginatedResult = signal<PagedList<Craft>>(new PagedList<Craft>());
     craftListParams = signal<CraftListParams>(new CraftListParams());
 
     resetCraftListParams(): void {
@@ -44,7 +44,7 @@ export class CraftService {
         params = params.append("isOrderDescending", this.craftListParams().isOrderDescending);
         params = params.append("archiveFilter", this.craftListParams().archiveFilter);
 
-        this.http.get<Craft[]>(`${this.baseUrl}crafts`, { observe: 'response', params}).subscribe({
+        this.http.get<PagedList<Craft>>(`${this.baseUrl}crafts`, { observe: 'response', params}).subscribe({
             next: response => {
                 this.setPaginatedResponse(response);
                 this.craftListCache.set(cacheKey, response);
@@ -82,27 +82,19 @@ export class CraftService {
         return this.http.put<Craft>(`${this.baseUrl}crafts/${id}/appropriate`, {});
     }
 
-    getInappropriateCrafts(paginationParams: PaginationParams): Observable<PaginatedList<Craft>> {
+    getInappropriateCrafts(paginationParams: PaginationParams): Observable<PagedList<Craft>> {
         let params = new HttpParams();
         if (paginationParams.pageNumber && paginationParams.pageSize) {
             params = params.append("pageNumber", paginationParams.pageNumber);
             params = params.append("pageSize", paginationParams.pageSize);
         }
 
-        return this.http.get<Craft[]>(`${this.baseUrl}crafts/inappropriate`, { observe: 'response', params}).pipe(
-            map((response: HttpResponse<Craft[]>) => {
-                return {
-                    items: response.body as Craft[], 
-                    pagination: JSON.parse(response.headers.get('Pagination')!)
-                } as PaginatedList<Craft>;
-            })
+        return this.http.get<PagedList<Craft>>(`${this.baseUrl}crafts/inappropriate`, { observe: 'response', params}).pipe(
+            map((response: HttpResponse<PagedList<Craft>>) => response.body as PagedList<Craft>)
         );
     }
 
-    private setPaginatedResponse(response: HttpResponse<Craft[]> ): void {
-        this.paginatedResult.set({
-            items: response.body as Craft[], 
-            pagination: JSON.parse(response.headers.get('Pagination')!)
-        })
+    private setPaginatedResponse(response: HttpResponse<PagedList<Craft>> ): void {
+        this.paginatedResult.set(response.body as PagedList<Craft>);
     }
 }
