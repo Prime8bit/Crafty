@@ -25,15 +25,6 @@ public static class ApplicationServiceExtensions
         var dbPassword = config["POSTGRES_PASSWORD"];
         var dbConnectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUsername};Password={dbPassword}";
         services.AddDbContext<DataContext>(options => options.UseNpgsql(dbConnectionString));
-        services.AddDbContext<DataContext>(options =>
-            options.UseNpgsql(dbConnectionString, npgsqlOptions =>
-            {
-                npgsqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 10,
-                    maxRetryDelay: TimeSpan.FromSeconds(5),
-                    errorCodesToAdd: null);
-            })
-        );
         
         services.Configure<CloudinarySettings>(config.GetSection("CloudinarySettings"));
 

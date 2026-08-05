@@ -72,7 +72,7 @@ export class MessageService {
         const otherUserId = Number(otherUserIdStr);
 
         this.hubConnection!.on(MessageHubMessages.ReceiveMessageThread, messages => {
-            this.messageThread.set(messages.reverse());
+            this.messageThread.set(messages.items.reverse());
             this.contacts.update(contacts => contacts.map(contact =>
                 contact.id === otherUserId
                 ? { ...contact, wasLastMessageRead: true}

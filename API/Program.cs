@@ -49,21 +49,27 @@ app.MapHub<MessageHub>("hubs/message");
 
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
-try
-{
-    var context = services.GetRequiredService<DataContext>();
-    var userManager = services.GetRequiredService<UserManager<User>>();
-    var roleManager = services.GetRequiredService<RoleManager<Role>>();
-    await context.Database.MigrateAsync();
-    await DataSeed.SeedUsers(userManager, roleManager);
 
-    await context.MessageConnections.ExecuteDeleteAsync();
-    await context.MessageGroups.ExecuteDeleteAsync();
-}
-catch (Exception ex)
+int maxAttempts = 5;
+for (int attempt = 0; attempt < maxAttempts; attempt++)
 {
-    var logger = services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "An error occurred during migration");
+    try
+    {
+        var context = services.GetRequiredService<DataContext>();
+        var userManager = services.GetRequiredService<UserManager<User>>();
+        var roleManager = services.GetRequiredService<RoleManager<Role>>();
+        await context.Database.MigrateAsync();
+        await DataSeed.SeedUsers(userManager, roleManager);
+
+        await context.MessageConnections.ExecuteDeleteAsync();
+        await context.MessageGroups.ExecuteDeleteAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, $"An error occurred during migration. Attempt {attempt + 1} of {maxAttempts}.");
+        await Task.Delay(TimeSpan.FromSeconds(5));
+    }
 }
 
 app.Run();
