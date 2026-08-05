@@ -1114,6 +1114,46 @@ ALTER TABLE ONLY public."UserMedia"
     ADD CONSTRAINT "FK_UserMedia_AspNetUsers_UserId" FOREIGN KEY ("UserId") REFERENCES public."AspNetUsers"("Id") ON DELETE CASCADE;
 
 
+-- NATE: making sure to set the last autoincrement value to the max value for each table
+DO $$
+BEGIN
+    PERFORM setval(
+        pg_get_serial_sequence('public."CraftMedia"', 'Id'),
+        (SELECT MAX("Id") FROM public."CraftMedia"),
+        true
+    );
+
+    PERFORM setval(
+        pg_get_serial_sequence('public."Crafts"', 'Id'),
+        (SELECT MAX("Id") FROM public."Crafts"),
+        true
+    );
+
+    PERFORM setval(
+        pg_get_serial_sequence('public."Messages"', 'Id'),
+        (SELECT MAX("Id") FROM public."Messages"),
+        true
+    );
+
+    PERFORM setval(
+        pg_get_serial_sequence('public."OrderItem"', 'Id'),
+        (SELECT MAX("Id") FROM public."OrderItem"),
+        true
+    );
+
+    PERFORM setval(
+        pg_get_serial_sequence('public."Orders"', 'Id'),
+        (SELECT MAX("Id") FROM public."Orders"),
+        true
+    );
+
+    PERFORM setval(
+        pg_get_serial_sequence('public."UserMedia"', 'Id'),
+        (SELECT MAX("Id") FROM public."UserMedia"),
+        true
+    );
+END $$;
+
 --
 -- PostgreSQL database dump complete
 --

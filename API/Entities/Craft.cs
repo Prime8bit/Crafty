@@ -8,6 +8,11 @@ public class Craft
     // If you want to change the name of this property then uncomment the line below
     // [Key]
     public long Id { get; set; }
+    // This needs to be nullable because the existing seed data doesn't have one
+    // Under ideal circumstances, it would be required.
+    // I don't use the idempotencyId for the primary key because I want to enable the user to 
+    // use baseurl/craft/{id} to look at a craft. If the id is a guid, then they would be frustrated typing it.
+    public Guid? IdempotencyId { get; set; }
     public required string Name { get; set; }
     public required float Price { get; set; }
     public string? Description { get; set; }

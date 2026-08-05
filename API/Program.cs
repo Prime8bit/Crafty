@@ -23,9 +23,8 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 
 var app = builder.Build();
 
-
 // Configure the HTTP request pipeline.
-app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<LoggingMiddleware>();
 
 #if DEBUG
 // The docker/k8s containers use a reverse proxy to keep traffic on the same host:port

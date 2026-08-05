@@ -2,6 +2,7 @@ import { CraftMedia } from "./media"
 
 export interface Craft {
     id: number;
+    idempotencyId: string;
     sellerId: number;
     sellerDisplayName: string;
     name: string;

@@ -107,8 +107,19 @@ public class CraftManager(
 
     public async Task<ManagerResponse<CraftDto>> CreateCraftAsync(CraftDto craftDto)
     {
+        var existingCraft = await context.Crafts
+            .Where(craft => craft.IdempotencyId == craftDto.IdempotencyId)
+            .ProjectToType<CraftDto>()
+            .SingleOrDefaultAsync();
+
+        if (existingCraft != null)
+        {
+            return new ManagerResponse<CraftDto>(existingCraft);
+        }
+
         var newCraft = new Craft()
         {
+            IdempotencyId = craftDto.IdempotencyId,
             Name = craftDto.Name ?? "",
             Price = craftDto.Price,
             Description = craftDto.Description ?? "",

@@ -21,5 +21,9 @@ public class CraftConfiguration : IEntityTypeConfiguration<Craft>
             .HasForeignKey<Craft>(craft => craft.SearchImageId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // EF core uses indexes to make columns Unique. Most SQL engines do this behind the scenes anyway.
+        builder.HasIndex(craft => craft.IdempotencyId)
+            .IsUnique();
     }
 }

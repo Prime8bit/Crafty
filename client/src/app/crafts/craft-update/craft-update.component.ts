@@ -43,6 +43,7 @@ export class CraftUpdateComponent implements OnInit {
     craftId: string | null = null;
     craft: Craft = {
         id: 0,
+        idempotencyId: "",
         name: '',
         description: '',
         price: 0,
@@ -91,6 +92,8 @@ export class CraftUpdateComponent implements OnInit {
         }
         else
         {
+            this.craft.idempotencyId = crypto.randomUUID();
+
             this.craftService.newCraft(this.craft).subscribe({
                 next: (response: Craft) => {
                     this.userService.markUserAsChanged(this.user!);
@@ -125,6 +128,7 @@ export class CraftUpdateComponent implements OnInit {
         if (this.craftId === null) {
             this.craft = {
                 id: 0,
+                idempotencyId: "",
                 name: '',
                 description: '',
                 price: 0,

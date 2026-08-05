@@ -13,9 +13,9 @@ public class ApiException(int statusCode, string Message, string? details = "")
     public string? Details { get; set; } = details;
 }
 
-public class ExceptionMiddleware(
+public class LoggingMiddleware(
     RequestDelegate next, 
-    ILogger<ExceptionMiddleware> logger, 
+    ILogger<LoggingMiddleware> logger, 
     IHostEnvironment env)
 {
     
